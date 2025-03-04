@@ -1,6 +1,8 @@
-from PySide6.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QApplication, QPushButton, QFileDialog
+from PySide6.QtWidgets import (QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QPushButton,
+                                QFileDialog, QApplication)
 from connection.ssh import ssh_connection
 from GUI.terminal_window import TerminalWindow
+from multiprocessing import Process
 
 
 class App(QMainWindow):
@@ -82,7 +84,14 @@ class App(QMainWindow):
 
         connection = ssh_connection(**connection_dict)
         if connection:
-            self.terminal = TerminalWindow()
-            self.terminal.show()
+            self.open_terminal(connection)
 
+    def open_terminal(self, connection):
+        process = Process(target=self.start_terminal, args=(connection,))
+        process.start()
 
+    def start_terminal(self, connection):
+        app = QApplication([])
+        terminal_window = TerminalWindow(connection)
+        terminal_window.show()
+        app.exec()
