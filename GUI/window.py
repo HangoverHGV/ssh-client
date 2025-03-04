@@ -142,6 +142,7 @@ class App(wx.Frame):
         # Configs dropdown row
         hbox6 = wx.BoxSizer(wx.HORIZONTAL)
         self.configs_dropdown = wx.Choice(panel)
+        self.configs_dropdown.Bind(wx.EVT_CHOICE, self.on_config_selected)
         hbox6.Add(self.configs_dropdown, flag=wx.RIGHT, border=8)
         vbox.Add(hbox6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
@@ -150,9 +151,6 @@ class App(wx.Frame):
         self.save_configs_button = wx.Button(panel, label="Save Configs")
         self.save_configs_button.Bind(wx.EVT_BUTTON, self.on_save_configs_click)
         hbox7.Add(self.save_configs_button, flag=wx.RIGHT, border=8)
-
-        self.load_setting = wx.Button(panel, label="Load Configs")
-        hbox7.Add(self.load_setting, flag=wx.RIGHT, border=8)
 
         self.delete_config_button = wx.Button(panel, label="Delete Config")
         self.delete_config_button.Bind(wx.EVT_BUTTON, self.on_delete_config)
@@ -215,7 +213,35 @@ class App(wx.Frame):
 
     def populate_configs_dropdown(self):
         config_names = [conf['name'] for conf in self.configs]
+        config_names.insert(0, 'None')
         self.configs_dropdown.SetItems(config_names)
+        self.configs_dropdown.SetSelection(0)
+
+    def on_config_selected(self, event):
+        selected_config_name = self.configs_dropdown.GetStringSelection()
+        if selected_config_name == 'None':
+            self.clear_all_fields()
+        else:
+            selected_config = next((conf for conf in self.configs if conf['name'] == selected_config_name), None)
+            if selected_config:
+                self.ip_input.SetValue(selected_config.get('hostname', ''))
+                self.port_input.SetValue(selected_config.get('port', ''))
+                self.private_key_path.SetValue(selected_config.get('private_key', ''))
+                self.private_key_value.SetValue('')  # Clear the private key value field
+                self.use_value_check.SetValue(False)  # Uncheck the use value checkbox
+                self.private_key_value.Disable()
+                self.private_key_path.Enable()
+                self.browse_button.Enable()
+
+    def clear_all_fields(self):
+        self.ip_input.SetValue('')
+        self.port_input.SetValue('')
+        self.private_key_path.SetValue('')
+        self.private_key_value.SetValue('')
+        self.use_value_check.SetValue(False)
+        self.private_key_value.Disable()
+        self.private_key_path.Enable()
+        self.browse_button.Enable()
 
     def on_save_configs_click(self, event):
         dlg = SaveConfigDialog(self)
