@@ -1,5 +1,5 @@
-import sys
-from PySide6.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QApplication
+from PySide6.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QApplication, QPushButton, QFileDialog
+from connection.ssh import ssh_connection
 
 
 class App(QMainWindow):
@@ -15,8 +15,8 @@ class App(QMainWindow):
         self.setCentralWidget(central_widget)
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(10, 10, 10, 20)  # Add space at the bottom
-        main_layout.setSpacing(5)  # Reduce spacing between rows
+        main_layout.setContentsMargins(10, 10, 10, 20)
+        main_layout.setSpacing(1)
 
         # First row
         first_row_layout = QHBoxLayout()
@@ -28,18 +28,56 @@ class App(QMainWindow):
         # Second row
         second_row_layout = QHBoxLayout()
         self.ip_input = QLineEdit(self, placeholderText='Enter hostname or IP')
+        self.ip_input.setFixedWidth(200)
         second_row_layout.addWidget(self.ip_input)
 
         self.port_input = QLineEdit(self, placeholderText='Enter port')
+        self.port_input.setFixedWidth(100)
         second_row_layout.addWidget(self.port_input)
+
+        self.connect_button = QPushButton('Connect', self)
+        self.connect_button.clicked.connect(self.ssh_connect)
+        second_row_layout.addWidget(self.connect_button)
 
         main_layout.addLayout(second_row_layout)
 
+        # Third row
+        third_row_layout = QHBoxLayout()
+        self.private_key_lbl = QLabel("Private Key:", self)
+        third_row_layout.addWidget(self.private_key_lbl)
+
+        self.private_key_path = QLineEdit(self, placeholderText='Select private key file')
+        self.private_key_path.setFixedWidth(200)
+        third_row_layout.addWidget(self.private_key_path)
+
+        self.browse_button = QPushButton('Browse', self)
+        self.browse_button.clicked.connect(self.browse_file)
+        third_row_layout.addWidget(self.browse_button)
+
+        main_layout.addLayout(third_row_layout)
+
         central_widget.setLayout(main_layout)
 
+    def browse_file(self):
+        file_dialog = QFileDialog(self)
+        file_path, _ = file_dialog.getOpenFileName(self, "Select Private Key File", "", "All Files (*)")
+        if file_path:
+            self.private_key_path.setText(file_path)
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = App()
-    ex.show()
-    sys.exit(app.exec_())
+    def ssh_connect(self):
+        connection_dict = {}
+        host = self.ip_input.text()
+        if '@' in host:
+            user, host = host.split('@')
+            connection_dict['user'] = user
+        connection_dict['host'] = host
+        port = self.port_input.text()
+        if not port:
+            port = 22
+        connection_dict['port'] = port
+        private_key = self.private_key_path.text()
+        if private_key:
+            connection_dict['private_key'] = private_key
+
+        ssh_connection(**connection_dict)
+
