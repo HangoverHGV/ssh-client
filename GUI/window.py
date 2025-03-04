@@ -8,9 +8,11 @@ import json
 class App(wx.Frame):
     def __init__(self, *args, **kw):
         super(App, self).__init__(*args, **kw)
+        self.SetSize((600, 400))  # Set the initial size of the frame
         self.initUI()
         self.config_file = self.init_configs_paths()
         self.configs = self.load_configs(self.config_file)
+        self.populate_configs_dropdown()
 
     @staticmethod
     def init_configs_paths():
@@ -72,9 +74,10 @@ class App(wx.Frame):
         hbox4 = wx.BoxSizer(wx.HORIZONTAL)
         self.private_key_value_lbl = wx.StaticText(panel, label="Private Key Value:")
         hbox4.Add(self.private_key_value_lbl, flag=wx.RIGHT, border=8)
-        self.private_key_value = wx.TextCtrl(panel)
+        self.private_key_value = wx.TextCtrl(panel, style=wx.TE_MULTILINE)  # Multi-line text box
         hbox4.Add(self.private_key_value, proportion=1)
         vbox.Add(hbox4, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+        self.private_key_value.SetMinSize((400, 100))
         self.private_key_value.Disable()
 
         # Check button row
@@ -84,11 +87,20 @@ class App(wx.Frame):
         hbox5.Add(self.use_value_check, flag=wx.RIGHT, border=8)
         vbox.Add(hbox5, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
-        # Save button row
+        # Configs dropdown row
         hbox6 = wx.BoxSizer(wx.HORIZONTAL)
+        self.configs_dropdown = wx.Choice(panel)
+        hbox6.Add(self.configs_dropdown, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+
+        # Save button row
+        hbox7 = wx.BoxSizer(wx.HORIZONTAL)
         self.save_setting = wx.Button(panel, label="Save Configs")
-        hbox6.Add(self.save_setting, flag=wx.RIGHT, border=8)
-        vbox.Add(hbox6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
+        hbox7.Add(self.save_setting, flag=wx.RIGHT, border=8)
+
+        self.load_setting = wx.Button(panel, label="Load Configs")
+        hbox7.Add(self.load_setting, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox7, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
 
         panel.SetSizer(vbox)
 
@@ -120,10 +132,18 @@ class App(wx.Frame):
             self.private_key_path.Disable()
             self.browse_button.Disable()
             self.private_key_value.Enable()
+            self.private_key_value.SetMinSize((400, 100))  # Increase the size of the text box
         else:
             self.private_key_path.Enable()
             self.browse_button.Enable()
             self.private_key_value.Disable()
+            self.private_key_value.SetMinSize((200, 30))  # Reset the size of the text box
+
+        self.Layout()  # Adjust the layout dynamically
+
+    def populate_configs_dropdown(self):
+        config_names = list(self.configs.keys())
+        self.configs_dropdown.SetItems(config_names)
 
     def save_configs(self, event):
         self.configs['hostname'] = self.ip_input.GetValue()
