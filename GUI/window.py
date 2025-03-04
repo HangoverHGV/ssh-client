@@ -264,12 +264,17 @@ class App(wx.Frame):
         save_config['name'] = config_name
         save_config['hostname'] = self.ip_input.GetValue()
         save_config['port'] = self.port_input.GetValue()
+        print(self.use_value_check.IsChecked())
         if self.private_key_path.GetValue() is not None or self.private_key_path.GetValue() != '' or self.private_key_path.GetValue().isspace():
+            print('Saving private key path')
             save_config['private_key'] = self.private_key_path.GetValue()
         elif self.use_value_check.IsChecked():
-            if self.private_key_value.GetValue() != '' or self.private_key_value.GetValue().isspace():
+            print('Saving private key value')
+            if self.private_key_value.GetValue() != '' or not self.private_key_value.GetValue().isspace():
+                print('Saving private key value')
                 private_key_file = self.save_to_ssh_folder(self.private_key_value.GetValue(), config_name)
                 save_config['private_key'] = private_key_file
+                wx.MessageBox(f'Saved private key to {private_key_file}', 'Info', wx.OK | wx.ICON_INFORMATION)
         else:
             save_config['private_key'] = None
 
