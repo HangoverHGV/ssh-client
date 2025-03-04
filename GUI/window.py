@@ -5,6 +5,7 @@ import multiprocessing as mp
 import json
 from GUI.appearance_dialog import AppearanceDialog
 from GUI.save_config_dialog import SaveConfigDialog
+from GUI.config_context_menu import ConfigContextMenu
 
 
 class App(wx.Frame):
@@ -152,9 +153,26 @@ class App(wx.Frame):
 
         self.load_setting = wx.Button(panel, label="Load Configs")
         hbox7.Add(self.load_setting, flag=wx.RIGHT, border=8)
+
+        self.delete_config_button = wx.Button(panel, label="Delete Config")
+        self.delete_config_button.Bind(wx.EVT_BUTTON, self.on_delete_config)
+        hbox7.Add(self.delete_config_button, flag=wx.RIGHT, border=8)
+
         vbox.Add(hbox7, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
 
+
         panel.SetSizer(vbox)
+
+    def on_delete_config(self, event):
+        selected_config = self.configs_dropdown.GetStringSelection()
+        if selected_config:
+            self.delete_config(selected_config)
+
+    def delete_config(self, config_name):
+        self.configs = [conf for conf in self.configs if conf['name'] != config_name]
+        self.save_configs_json(self.configs_file, self.configs)
+        self.populate_configs_dropdown()
+        self.Refresh()
 
     def create_menu_bar(self):
         menubar = wx.MenuBar()
