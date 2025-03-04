@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import (QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QPushButton,
-                                QFileDialog, QApplication)
-from connection.ssh import ssh_connection
+                                QApplication, QFileDialog)
 from GUI.terminal_window import TerminalWindow
-from multiprocessing import Process
+import multiprocessing as mp
 
 
 class App(QMainWindow):
@@ -68,30 +67,23 @@ class App(QMainWindow):
             self.private_key_path.setText(file_path)
 
     def ssh_connect(self):
-        connection_dict = {}
         host = self.ip_input.text()
+        user = ''
         if '@' in host:
             user, host = host.split('@')
-            connection_dict['user'] = user
-        connection_dict['host'] = host
-        port = self.port_input.text()
-        if not port:
-            port = 22
-        connection_dict['port'] = port
+        port = self.port_input.text() or '22'
         private_key = self.private_key_path.text()
-        if private_key:
-            connection_dict['private_key'] = private_key
 
-        connection = ssh_connection(**connection_dict)
-        if connection:
-            self.open_terminal(connection)
+        self.start_terminal(host, user, port, private_key)
 
-    def open_terminal(self, connection):
-        process = Process(target=self.start_terminal, args=(connection,))
-        process.start()
+    def start_terminal(self, host, user, port, private_key):
+        self.terminal_process = mp.Process(target=open_terminal, args=(host, user, port, private_key))
+        self.terminal_process.start()
+        self.terminal_process.join()
 
-    def start_terminal(self, connection):
-        app = QApplication([])
-        terminal_window = TerminalWindow(connection)
-        terminal_window.show()
-        app.exec()
+def open_terminal(host, user, port, private_key):
+    app = QApplication([])
+    terminal_window = TerminalWindow(host, user, port, private_key)
+    terminal_window.show()
+    app.exec()
+
