@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QApplication, QPushButton, QFileDialog
 from connection.ssh import ssh_connection
+from GUI.terminal_window import TerminalWindow
 
 
 class App(QMainWindow):
@@ -79,5 +80,9 @@ class App(QMainWindow):
         if private_key:
             connection_dict['private_key'] = private_key
 
-        ssh_connection(**connection_dict)
+        connection = ssh_connection(**connection_dict)
+        if connection:
+            self.terminal = TerminalWindow()
+            self.terminal.show()
+
 
