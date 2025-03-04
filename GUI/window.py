@@ -61,6 +61,9 @@ class App(wx.Frame):
         self.start_terminal(host, user, port, private_key)
 
     def start_terminal(self, host, user, port, private_key):
+        if host == '' or host.isspace() or host is None:
+            wx.MessageBox('Hostname cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
+            return
         self.terminal_process = Process(target=open_terminal, args=(host, user, port, private_key))
         self.terminal_process.start()
         self.terminal_process.join()

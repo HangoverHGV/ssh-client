@@ -14,4 +14,4 @@ def ssh_connection(host, user='', password='', port=22, private_key=None):
         return client
     except Exception as e:
         print(f"Error: {e}")
-        return None
+        return e
