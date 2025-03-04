@@ -9,10 +9,11 @@ class App(wx.Frame):
     def __init__(self, *args, **kw):
         super(App, self).__init__(*args, **kw)
         self.initUI()
-        self.configs = self.load_configs()
+        self.config_file = self.init_configs_paths()
+        self.configs = self.load_configs(self.config_file)
 
     @staticmethod
-    def load_configs():
+    def init_configs_paths():
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
@@ -20,11 +21,18 @@ class App(wx.Frame):
         if not os.path.exists(config_file):
             with open(config_file, 'w') as f:
                 json.dump({}, f)
+        return config_file
 
+    @staticmethod
+    def load_configs(config_file):
         with open(config_file, 'r') as f:
             configs = json.load(f)
-
         return configs
+
+    @staticmethod
+    def save_configs_json(config_file, configs):
+        with open(config_file, 'w') as f:
+            json.dump(configs, f)
 
     def initUI(self):
         self.create_menu_bar()
@@ -60,26 +68,37 @@ class App(wx.Frame):
         hbox3.Add(self.browse_button, flag=wx.LEFT, border=10)
         vbox.Add(hbox3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
-        # Forth row
+        # Fourth row
         hbox4 = wx.BoxSizer(wx.HORIZONTAL)
-        self.save_setting = wx.Button(panel, label="Save Configs")
-        hbox4.Add(self.save_setting, flag=wx.RIGHT, border=8)
+        self.private_key_value_lbl = wx.StaticText(panel, label="Private Key Value:")
+        hbox4.Add(self.private_key_value_lbl, flag=wx.RIGHT, border=8)
+        self.private_key_value = wx.TextCtrl(panel)
+        hbox4.Add(self.private_key_value, proportion=1)
+        vbox.Add(hbox4, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+        self.private_key_value.Disable()
 
-        vbox.Add(hbox4, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
+        # Check button row
+        hbox5 = wx.BoxSizer(wx.HORIZONTAL)
+        self.use_value_check = wx.CheckBox(panel, label="Use Private Key Value")
+        self.use_value_check.Bind(wx.EVT_CHECKBOX, self.on_use_value_check)
+        hbox5.Add(self.use_value_check, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox5, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+
+        # Save button row
+        hbox6 = wx.BoxSizer(wx.HORIZONTAL)
+        self.save_setting = wx.Button(panel, label="Save Configs")
+        hbox6.Add(self.save_setting, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
 
         panel.SetSizer(vbox)
 
     def create_menu_bar(self):
         menubar = wx.MenuBar()
-
         edit_menu = wx.Menu()
         theme_item = edit_menu.Append(wx.ID_ANY, 'Change Theme')
         settings_item = edit_menu.Append(wx.ID_ANY, 'Settings')
-
         menubar.Append(edit_menu, '&Edit')
-
         self.SetMenuBar(menubar)
-
         self.Bind(wx.EVT_MENU, self.on_change_theme, theme_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
 
@@ -96,6 +115,22 @@ class App(wx.Frame):
                 return
             self.private_key_path.SetValue(fileDialog.GetPath())
 
+    def on_use_value_check(self, event):
+        if self.use_value_check.IsChecked():
+            self.private_key_path.Disable()
+            self.browse_button.Disable()
+            self.private_key_value.Enable()
+        else:
+            self.private_key_path.Enable()
+            self.browse_button.Enable()
+            self.private_key_value.Disable()
+
+    def save_configs(self, event):
+        self.configs['hostname'] = self.ip_input.GetValue()
+        self.configs['port'] = self.port_input.GetValue()
+        self.configs['private_key'] = self.private_key_path.GetValue()
+        self.save_configs_json(self.config_file, self.configs)
+
     def ssh_connect(self, event):
         host = self.ip_input.GetValue()
         user = ''
@@ -103,6 +138,14 @@ class App(wx.Frame):
             user, host = host.split('@')
         port = self.port_input.GetValue() or '22'
         private_key = self.private_key_path.GetValue()
+
+        if self.use_value_check.IsChecked():
+            private_key_value = self.private_key_value.GetValue()
+            private_key_path = os.path.expanduser('~/.ssh/id_rsa')
+            with open(private_key_path, 'w') as f:
+                f.write(private_key_value)
+            os.chmod(private_key_path, 0o600)
+            private_key = private_key_path
 
         self.open_terminal(host, user, port, private_key)
 
