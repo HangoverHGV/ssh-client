@@ -147,7 +147,7 @@ class App(wx.Frame):
         # Save button row
         hbox7 = wx.BoxSizer(wx.HORIZONTAL)
         self.save_configs_button = wx.Button(panel, label="Save Configs")
-        self.save_configs_button.Bind(wx.EVT_BUTTON, self.save_configs)
+        self.save_configs_button.Bind(wx.EVT_BUTTON, self.on_save_configs_click)
         hbox7.Add(self.save_configs_button, flag=wx.RIGHT, border=8)
 
         self.load_setting = wx.Button(panel, label="Load Configs")
@@ -196,8 +196,13 @@ class App(wx.Frame):
         self.Layout()  # Adjust the layout dynamically
 
     def populate_configs_dropdown(self):
-        config_names = list(self.settings.keys())
+        config_names = [conf['name'] for conf in self.configs]
         self.configs_dropdown.SetItems(config_names)
+
+    def on_save_configs_click(self, event):
+        dlg = SaveConfigDialog(self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def save_to_ssh_folder(self, private_key_value, file_name):
         ssh_folder = os.path.join(os.path.expanduser('~'), '.ssh')
@@ -210,16 +215,25 @@ class App(wx.Frame):
         return file_path
 
 
-    def save_configs(self, event):
-
-
+    def save_configs(self, config_name):
         save_config = {}
+        save_config['name'] = config_name
         save_config['hostname'] = self.ip_input.GetValue()
         save_config['port'] = self.port_input.GetValue()
         if self.private_key_path.GetValue() is not None or self.private_key_path.GetValue() != '' or self.private_key_path.GetValue().isspace():
             save_config['private_key'] = self.private_key_path.GetValue()
         elif self.use_value_check.IsChecked():
             if self.private_key_value.GetValue() != '' or self.private_key_value.GetValue().isspace():
+                private_key_file = self.save_to_ssh_folder(self.private_key_value.GetValue(), config_name)
+                save_config['private_key'] = private_key_file
+        else:
+            save_config['private_key'] = None
+
+        self.configs.append(save_config)
+        self.save_configs_json(self.configs_file, self.configs)
+        self.configs = self.load_configs(self.configs_file)
+        self.populate_configs_dropdown()
+        self.Refresh()
 
 
     def ssh_connect(self, event):

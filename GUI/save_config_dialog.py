@@ -27,8 +27,12 @@ class SaveConfigDialog(wx.Dialog):
 
     def on_save(self, event):
         config_name = self.config_name_input.GetValue()
+        parent_configs_name = [confs['name'] for confs in self.parent.configs]
         if config_name:
-            self.parent.save_configs(config_name)
-            self.Close()
+            if config_name in parent_configs_name:
+                wx.MessageBox('Config name already exists', 'Error', wx.OK | wx.ICON_ERROR)
+            else:
+                self.parent.save_configs(config_name)
+                self.Close()
         else:
             wx.MessageBox('Config name cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
