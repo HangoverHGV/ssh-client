@@ -1,11 +1,11 @@
 import subprocess
 import time
-
 import wx
 import os
 import multiprocessing as mp
 import json
 from GUI.appearance_dialog import AppearanceDialog
+from GUI.settings_dialog import SettingsDialog
 
 
 class App(wx.Frame):
@@ -192,7 +192,9 @@ class App(wx.Frame):
         dlg.Destroy()
 
     def on_settings(self, event):
-        wx.MessageBox('Settings clicked', 'Info', wx.OK | wx.ICON_INFORMATION)
+        dlg = SettingsDialog(self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def browse_file(self, event):
         with wx.FileDialog(self, "Select Private Key File", wildcard="All files (*.*)|*.*",
