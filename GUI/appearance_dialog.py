@@ -16,7 +16,7 @@ class AppearanceDialog(wx.Dialog):
         theme_label = wx.StaticText(panel, label="Theme:")
         hbox1.Add(theme_label, flag=wx.RIGHT, border=8)
         self.theme_choice = wx.Choice(panel, choices=["light", "dark"])
-        self.theme_choice.SetStringSelection(self.parent.configs.get('theme', 'light'))
+        self.theme_choice.SetStringSelection(self.parent.settings.get('theme', 'light'))
         self.theme_choice.Bind(wx.EVT_CHOICE, self.on_theme_change)
         hbox1.Add(self.theme_choice, flag=wx.EXPAND)
         vbox.Add(hbox1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -26,7 +26,7 @@ class AppearanceDialog(wx.Dialog):
         font_size_label = wx.StaticText(panel, label="Font Size:")
         hbox2.Add(font_size_label, flag=wx.RIGHT, border=8)
         self.font_size_choice = wx.Choice(panel, choices=[str(i) for i in range(8, 25)])
-        self.font_size_choice.SetStringSelection(str(self.parent.configs.get('font_size', 12)))
+        self.font_size_choice.SetStringSelection(str(self.parent.settings.get('font_size', 12)))
         hbox2.Add(self.font_size_choice, flag=wx.EXPAND)
         vbox.Add(hbox2, flag=wx.EXPAND | wx.ALL, border=10)
 

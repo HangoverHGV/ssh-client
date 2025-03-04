@@ -4,6 +4,7 @@ import os
 import multiprocessing as mp
 import json
 from GUI.appearance_dialog import AppearanceDialog
+from GUI.save_config_dialog import SaveConfigDialog
 
 
 class App(wx.Frame):
@@ -11,20 +12,22 @@ class App(wx.Frame):
         super(App, self).__init__(*args, **kw)
         self.SetSize((600, 400))  # Set the initial size of the frame
         self.init_ui()
+        self.configs_file = self.init_configs_paths('configs.json', [])
+        self.configs = self.load_configs(self.configs_file)
         self.settings_file = self.init_configs_paths('settings.json')
-        self.configs = self.load_configs(self.settings_file)
+        self.settings = self.load_configs(self.settings_file)
         self.load_theme()
         self.populate_configs_dropdown()
 
     @staticmethod
-    def init_configs_paths(file_name='settings.json'):
+    def init_configs_paths(file_name='settings.json', init_obj = {}):
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
         config_file = os.path.join(configs_folder, file_name)
         if not os.path.exists(config_file):
             with open(config_file, 'w') as f:
-                json.dump({}, f)
+                json.dump(init_obj, f)
         return config_file
 
     @staticmethod
@@ -65,9 +68,11 @@ class App(wx.Frame):
 
     def save_theme(self, theme, font_color, font_size):
         settings = {
-            'theme': theme,
-            'font_color': font_color,
-            'font_size': font_size
+            'appearance': {
+                'theme': theme,
+                'font_color': font_color,
+                'font_size': font_size
+            }
         }
         with open(self.settings_file, 'w') as f:
             json.dump(settings, f)
@@ -76,10 +81,10 @@ class App(wx.Frame):
     def load_theme(self):
         with open(self.settings_file, 'r') as f:
             settings = json.load(f)
-        theme = settings.get('theme', 'light')
-
-        font_color = settings.get('font_color', '#000000')
-        font_size = settings.get('font_size', 12)
+        appearance = settings.get('appearance', {})
+        theme = appearance.get('theme', 'light')
+        font_color = appearance.get('font_color', '#000000')
+        font_size = appearance.get('font_size', 12)
         self.change_theme(theme, font_color, font_size)
 
     def init_ui(self):
@@ -141,8 +146,9 @@ class App(wx.Frame):
 
         # Save button row
         hbox7 = wx.BoxSizer(wx.HORIZONTAL)
-        self.save_setting = wx.Button(panel, label="Save Configs")
-        hbox7.Add(self.save_setting, flag=wx.RIGHT, border=8)
+        self.save_configs_button = wx.Button(panel, label="Save Configs")
+        self.save_configs_button.Bind(wx.EVT_BUTTON, self.save_configs)
+        hbox7.Add(self.save_configs_button, flag=wx.RIGHT, border=8)
 
         self.load_setting = wx.Button(panel, label="Load Configs")
         hbox7.Add(self.load_setting, flag=wx.RIGHT, border=8)
@@ -190,14 +196,31 @@ class App(wx.Frame):
         self.Layout()  # Adjust the layout dynamically
 
     def populate_configs_dropdown(self):
-        config_names = list(self.configs.keys())
+        config_names = list(self.settings.keys())
         self.configs_dropdown.SetItems(config_names)
 
+    def save_to_ssh_folder(self, private_key_value, file_name):
+        ssh_folder = os.path.join(os.path.expanduser('~'), '.ssh')
+        if not os.path.exists(ssh_folder):
+            os.makedirs(ssh_folder)
+        file_path = os.path.join(ssh_folder, file_name)
+        with open(file_path, 'w') as f:
+            f.write(private_key_value)
+
+        return file_path
+
+
     def save_configs(self, event):
-        self.configs['hostname'] = self.ip_input.GetValue()
-        self.configs['port'] = self.port_input.GetValue()
-        self.configs['private_key'] = self.private_key_path.GetValue()
-        self.save_configs_json(self.settings_file, self.configs)
+
+
+        save_config = {}
+        save_config['hostname'] = self.ip_input.GetValue()
+        save_config['port'] = self.port_input.GetValue()
+        if self.private_key_path.GetValue() is not None or self.private_key_path.GetValue() != '' or self.private_key_path.GetValue().isspace():
+            save_config['private_key'] = self.private_key_path.GetValue()
+        elif self.use_value_check.IsChecked():
+            if self.private_key_value.GetValue() != '' or self.private_key_value.GetValue().isspace():
+
 
     def ssh_connect(self, event):
         host = self.ip_input.GetValue()
