@@ -1,89 +1,73 @@
-from PySide6.QtWidgets import (QMainWindow, QLabel, QHBoxLayout, QWidget, QLineEdit, QVBoxLayout, QPushButton,
-                                QApplication, QFileDialog)
+import wx
+from multiprocessing import Process
 from GUI.terminal_window import TerminalWindow
-import multiprocessing as mp
 
 
-class App(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class App(wx.Frame):
+    def __init__(self, *args, **kw):
+        super(App, self).__init__(*args, **kw)
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('SSH-Client')
-        self.setGeometry(100, 100, 400, 200)
+        panel = wx.Panel(self)
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(10, 10, 10, 20)
-        main_layout.setSpacing(1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
 
         # First row
-        first_row_layout = QHBoxLayout()
-        self.label = QLabel("Hostname:", self)
-        first_row_layout.addWidget(self.label)
-
-        main_layout.addLayout(first_row_layout)
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.label = wx.StaticText(panel, label="Hostname:")
+        hbox1.Add(self.label, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox1, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
         # Second row
-        second_row_layout = QHBoxLayout()
-        self.ip_input = QLineEdit(self, placeholderText='Enter hostname or IP')
-        self.ip_input.setFixedWidth(200)
-        second_row_layout.addWidget(self.ip_input)
-
-        self.port_input = QLineEdit(self, placeholderText='Enter port')
-        self.port_input.setFixedWidth(100)
-        second_row_layout.addWidget(self.port_input)
-
-        self.connect_button = QPushButton('Connect', self)
-        self.connect_button.clicked.connect(self.ssh_connect)
-        second_row_layout.addWidget(self.connect_button)
-
-        main_layout.addLayout(second_row_layout)
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.ip_input = wx.TextCtrl(panel)
+        hbox2.Add(self.ip_input, proportion=1)
+        self.port_input = wx.TextCtrl(panel)
+        hbox2.Add(self.port_input, flag=wx.LEFT, border=10)
+        self.connect_button = wx.Button(panel, label='Connect')
+        self.connect_button.Bind(wx.EVT_BUTTON, self.ssh_connect)
+        hbox2.Add(self.connect_button, flag=wx.LEFT, border=10)
+        vbox.Add(hbox2, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
         # Third row
-        third_row_layout = QHBoxLayout()
-        self.private_key_lbl = QLabel("Private Key:", self)
-        third_row_layout.addWidget(self.private_key_lbl)
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        self.private_key_lbl = wx.StaticText(panel, label="Private Key:")
+        hbox3.Add(self.private_key_lbl, flag=wx.RIGHT, border=8)
+        self.private_key_path = wx.TextCtrl(panel)
+        hbox3.Add(self.private_key_path, proportion=1)
+        self.browse_button = wx.Button(panel, label='Browse')
+        self.browse_button.Bind(wx.EVT_BUTTON, self.browse_file)
+        hbox3.Add(self.browse_button, flag=wx.LEFT, border=10)
+        vbox.Add(hbox3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
-        self.private_key_path = QLineEdit(self, placeholderText='Select private key file')
-        self.private_key_path.setFixedWidth(200)
-        third_row_layout.addWidget(self.private_key_path)
+        panel.SetSizer(vbox)
 
-        self.browse_button = QPushButton('Browse', self)
-        self.browse_button.clicked.connect(self.browse_file)
-        third_row_layout.addWidget(self.browse_button)
+    def browse_file(self, event):
+        with wx.FileDialog(self, "Select Private Key File", wildcard="All files (*.*)|*.*",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            self.private_key_path.SetValue(fileDialog.GetPath())
 
-        main_layout.addLayout(third_row_layout)
-
-        central_widget.setLayout(main_layout)
-
-    def browse_file(self):
-        file_dialog = QFileDialog(self)
-        file_path, _ = file_dialog.getOpenFileName(self, "Select Private Key File", "", "All Files (*)")
-        if file_path:
-            self.private_key_path.setText(file_path)
-
-    def ssh_connect(self):
-        host = self.ip_input.text()
+    def ssh_connect(self, event):
+        host = self.ip_input.GetValue()
         user = ''
         if '@' in host:
             user, host = host.split('@')
-        port = self.port_input.text() or '22'
-        private_key = self.private_key_path.text()
+        port = self.port_input.GetValue() or '22'
+        private_key = self.private_key_path.GetValue()
 
         self.start_terminal(host, user, port, private_key)
 
     def start_terminal(self, host, user, port, private_key):
-        self.terminal_process = mp.Process(target=open_terminal, args=(host, user, port, private_key))
+        self.terminal_process = Process(target=open_terminal, args=(host, user, port, private_key))
         self.terminal_process.start()
         self.terminal_process.join()
 
-def open_terminal(host, user, port, private_key):
-    app = QApplication([])
-    terminal_window = TerminalWindow(host, user, port, private_key)
-    terminal_window.show()
-    app.exec()
 
+def open_terminal(host, user, port, private_key):
+    app = wx.App(False)
+    terminal_window = TerminalWindow(None, title="Terminal", host=host, user=user, port=port, private_key=private_key)
+    terminal_window.Show()
+    app.MainLoop()

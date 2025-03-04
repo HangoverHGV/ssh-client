@@ -1,40 +1,65 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPlainTextEdit, QLineEdit, QPushButton
+import wx
+import paramiko
+import pyte
+import threading
+import traceback
 
-
-class TerminalWindow(QMainWindow):
-    def __init__(self, connection):
-        super().__init__()
-        self.connection = connection
+class TerminalWindow(wx.Frame):
+    def __init__(self, parent, title, host, user, port, private_key):
+        super(TerminalWindow, self).__init__(parent, title=title)
+        self.host = host
+        self.user = user
+        self.port = port
+        self.private_key = private_key
+        self.connection = self.create_connection()
         self.initUI()
 
+    def create_connection(self):
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        pkey = paramiko.RSAKey.from_private_key_file(self.private_key) if self.private_key else None
+        client.connect(hostname=self.host, username=self.user, port=self.port, pkey=pkey)
+        print("connected")
+        return client
+
     def initUI(self):
-        self.setWindowTitle('Terminal')
-        self.setGeometry(150, 150, 600, 400)
+        panel = wx.Panel(self)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        self.terminal_output = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        vbox.Add(self.terminal_output, proportion=1, flag=wx.EXPAND)
+        panel.SetSizer(vbox)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+        self.start_ssh_session()
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+    def start_ssh_session(self):
+        self.channel = self.connection.get_transport().open_session()
+        self.channel.get_pty()
+        self.channel.invoke_shell()
+        self.screen = pyte.Screen(80, 24)
+        self.stream = pyte.Stream(self.screen)
+        self.thread = threading.Thread(target=self.update_terminal)
+        self.thread.daemon = True
+        self.thread.start()
 
-        main_layout = QVBoxLayout()
-        self.terminal_output = QPlainTextEdit(self)
-        self.terminal_output.setReadOnly(True)
-        main_layout.addWidget(self.terminal_output)
+    def update_terminal(self):
+        try:
+            while True:
+                data = self.channel.recv(1024).decode('utf-8')
+                self.stream.feed(data)
+                wx.CallAfter(self.terminal_output.SetValue, '\n'.join(self.screen.display))
+        except Exception as e:
+            print("Exception in update_terminal:", e)
+            traceback.print_exc()
 
-        self.command_input = QLineEdit(self, placeholderText='Enter command')
-        main_layout.addWidget(self.command_input)
+    def on_key_press(self, event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_RETURN:
+            self.channel.send('\n')
+        else:
+            self.channel.send(chr(keycode))
+        event.Skip()
 
-        self.send_button = QPushButton('Send', self)
-        self.send_button.clicked.connect(self.send_command)
-        main_layout.addWidget(self.send_button)
-
-        central_widget.setLayout(main_layout)
-
-    def append_text(self, text):
-        self.terminal_output.appendPlainText(text)
-
-    def send_command(self):
-        command = self.command_input.text()
-        if command:
-            stdin, stdout, stderr = self.connection.exec_command(command)
-            output = stdout.read().decode()
-            self.append_text(output)
-            self.command_input.clear()
+    def closeEvent(self, event):
+        self.channel.close()
+        self.connection.close()
+        event.Skip()

@@ -1,17 +1,11 @@
-from multiprocessing import Process
-from PySide6.QtWidgets import QApplication
-import sys
-
+import wx
 from GUI.window import App
 
-
 def main():
-    app = QApplication(sys.argv)
-    ex = App()
-    ex.show()
-    sys.exit(app.exec_())
-
+    app = wx.App(False)
+    frame = App(None, title="SSH-Client")
+    frame.Show()
+    app.MainLoop()
 
 if __name__ == '__main__':
-    process = Process(target=main)
-    process.start()
+    main()
