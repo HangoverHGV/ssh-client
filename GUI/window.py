@@ -1,6 +1,6 @@
+import subprocess
 import wx
-from multiprocessing import Process
-from GUI.terminal_window import TerminalWindow
+import os
 
 
 class App(wx.Frame):
@@ -64,13 +64,18 @@ class App(wx.Frame):
         if host == '' or host.isspace() or host is None:
             wx.MessageBox('Hostname cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
             return
-        self.terminal_process = Process(target=open_terminal, args=(host, user, port, private_key))
-        self.terminal_process.start()
-        self.terminal_process.join()
+        connection = ["ssh"]
+        if user:
+            connection.extend([f"{user}@{host}"])
+        else:
+            connection.extend([f"{host}"])
+        if port:
+            connection.extend(["-p", port])
+        if private_key:
+            connection.extend(["-i", private_key])
 
+        if os.name == 'nt':  # Windows
+            subprocess.Popen(['start', 'cmd', '/k'] + connection, shell=True)
+        else:  # Unix-based systems
+            subprocess.Popen(['x-terminal-emulator', '-e'] + connection)
 
-def open_terminal(host, user, port, private_key):
-    app = wx.App(False)
-    terminal_window = TerminalWindow(None, title="Terminal", host=host, user=user, port=port, private_key=private_key)
-    terminal_window.Show()
-    app.MainLoop()
