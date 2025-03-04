@@ -320,10 +320,6 @@ class App(wx.Frame):
         p.start()
         p.join()
 
-def delete_ssh_key_file(file_path):
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
 def start_terminal(host, user, port, private_key):
     if host == '' or host.isspace() or host is None:
         wx.MessageBox('Hostname cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
@@ -346,5 +342,4 @@ def start_terminal(host, user, port, private_key):
     time.sleep(5)
 
     if private_key and os.path.exists(private_key):
-
         os.remove(private_key)
