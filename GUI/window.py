@@ -3,23 +3,25 @@ import wx
 import os
 import multiprocessing as mp
 import json
+from GUI.appearance_dialog import AppearanceDialog
 
 
 class App(wx.Frame):
     def __init__(self, *args, **kw):
         super(App, self).__init__(*args, **kw)
         self.SetSize((600, 400))  # Set the initial size of the frame
-        self.initUI()
-        self.config_file = self.init_configs_paths()
-        self.configs = self.load_configs(self.config_file)
+        self.init_ui()
+        self.settings_file = self.init_configs_paths('settings.json')
+        self.configs = self.load_configs(self.settings_file)
+        self.load_theme()
         self.populate_configs_dropdown()
 
     @staticmethod
-    def init_configs_paths():
+    def init_configs_paths(file_name='settings.json'):
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
-        config_file = os.path.join(configs_folder, 'config.json')
+        config_file = os.path.join(configs_folder, file_name)
         if not os.path.exists(config_file):
             with open(config_file, 'w') as f:
                 json.dump({}, f)
@@ -36,7 +38,51 @@ class App(wx.Frame):
         with open(config_file, 'w') as f:
             json.dump(configs, f)
 
-    def initUI(self):
+    def change_theme(self, theme, font_color, font_size):
+        if theme == 'dark':
+            self.SetBackgroundColour(wx.Colour(45, 45, 48))
+            self.SetForegroundColour(wx.Colour(255, 255, 255))
+            button_bg_color = wx.Colour(0, 0, 0)
+        else:
+            self.SetBackgroundColour(wx.Colour(255, 255, 255))
+            self.SetForegroundColour(wx.Colour(0, 0, 0))
+            button_bg_color = wx.NullColour
+
+        font = self.GetFont()
+        font.SetPointSize(font_size)
+        self.SetFont(font)
+
+        def apply_font_settings(widget):
+            widget.SetForegroundColour(wx.Colour(font_color))
+            widget.SetFont(font)
+            if isinstance(widget, wx.Button):
+                widget.SetBackgroundColour(button_bg_color)
+            for child in widget.GetChildren():
+                apply_font_settings(child)
+
+        apply_font_settings(self)
+        self.Refresh()
+
+    def save_theme(self, theme, font_color, font_size):
+        settings = {
+            'theme': theme,
+            'font_color': font_color,
+            'font_size': font_size
+        }
+        with open(self.settings_file, 'w') as f:
+            json.dump(settings, f)
+        self.load_theme()
+
+    def load_theme(self):
+        with open(self.settings_file, 'r') as f:
+            settings = json.load(f)
+        theme = settings.get('theme', 'light')
+
+        font_color = settings.get('font_color', '#000000')
+        font_size = settings.get('font_size', 12)
+        self.change_theme(theme, font_color, font_size)
+
+    def init_ui(self):
         self.create_menu_bar()
 
         panel = wx.Panel(self)
@@ -107,15 +153,17 @@ class App(wx.Frame):
     def create_menu_bar(self):
         menubar = wx.MenuBar()
         edit_menu = wx.Menu()
-        theme_item = edit_menu.Append(wx.ID_ANY, 'Change Theme')
+        appearance_item = edit_menu.Append(wx.ID_ANY, 'Appearance')
         settings_item = edit_menu.Append(wx.ID_ANY, 'Settings')
         menubar.Append(edit_menu, '&Edit')
         self.SetMenuBar(menubar)
-        self.Bind(wx.EVT_MENU, self.on_change_theme, theme_item)
+        self.Bind(wx.EVT_MENU, self.on_appearance, appearance_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
 
-    def on_change_theme(self, event):
-        wx.MessageBox('Change Theme clicked', 'Info', wx.OK | wx.ICON_INFORMATION)
+    def on_appearance(self, event):
+        dlg = AppearanceDialog(self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def on_settings(self, event):
         wx.MessageBox('Settings clicked', 'Info', wx.OK | wx.ICON_INFORMATION)
@@ -149,7 +197,7 @@ class App(wx.Frame):
         self.configs['hostname'] = self.ip_input.GetValue()
         self.configs['port'] = self.port_input.GetValue()
         self.configs['private_key'] = self.private_key_path.GetValue()
-        self.save_configs_json(self.config_file, self.configs)
+        self.save_configs_json(self.settings_file, self.configs)
 
     def ssh_connect(self, event):
         host = self.ip_input.GetValue()
