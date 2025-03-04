@@ -1,11 +1,11 @@
 import subprocess
+import time
+
 import wx
 import os
 import multiprocessing as mp
 import json
 from GUI.appearance_dialog import AppearanceDialog
-from GUI.save_config_dialog import SaveConfigDialog
-from GUI.config_context_menu import ConfigContextMenu
 
 
 class App(wx.Frame):
@@ -148,6 +148,10 @@ class App(wx.Frame):
 
         # Save button row
         hbox7 = wx.BoxSizer(wx.HORIZONTAL)
+        self.name_label = wx.StaticText(panel, label="Name:")
+        self.name_input = wx.TextCtrl(panel)
+        hbox7.Add(self.name_label, flag=wx.RIGHT, border=8)
+        hbox7.Add(self.name_input, proportion=1)
         self.save_configs_button = wx.Button(panel, label="Save Configs")
         self.save_configs_button.Bind(wx.EVT_BUTTON, self.on_save_configs_click)
         hbox7.Add(self.save_configs_button, flag=wx.RIGHT, border=8)
@@ -244,9 +248,19 @@ class App(wx.Frame):
         self.browse_button.Enable()
 
     def on_save_configs_click(self, event):
-        dlg = SaveConfigDialog(self)
-        dlg.ShowModal()
-        dlg.Destroy()
+        config_name = self.name_input.GetValue()
+        parent_configs_name = [confs['name'] for confs in self.configs]
+        if config_name:
+            if config_name in parent_configs_name:
+                wx.MessageBox('Config name already exists', 'Error', wx.OK | wx.ICON_ERROR)
+            else:
+                confirm_dialog = wx.MessageDialog(self, f"Do you want to save the configuration '{config_name}'?",
+                                                  "Confirm Save", wx.YES_NO | wx.ICON_QUESTION)
+                if confirm_dialog.ShowModal() == wx.ID_YES:
+                    self.save_configs(config_name)
+                confirm_dialog.Destroy()
+        else:
+            wx.MessageBox('Config name cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
 
     def save_to_ssh_folder(self, private_key_value, file_name):
         ssh_folder = os.path.join(os.path.expanduser('~'), '.ssh')
@@ -265,13 +279,10 @@ class App(wx.Frame):
         save_config['hostname'] = self.ip_input.GetValue()
         save_config['port'] = self.port_input.GetValue()
         print(self.use_value_check.IsChecked())
-        if self.private_key_path.GetValue() is not None or self.private_key_path.GetValue() != '' or self.private_key_path.GetValue().isspace():
-            print('Saving private key path')
+        if not self.use_value_check.IsChecked():
             save_config['private_key'] = self.private_key_path.GetValue()
         elif self.use_value_check.IsChecked():
-            print('Saving private key value')
             if self.private_key_value.GetValue() != '' or not self.private_key_value.GetValue().isspace():
-                print('Saving private key value')
                 private_key_file = self.save_to_ssh_folder(self.private_key_value.GetValue(), config_name)
                 save_config['private_key'] = private_key_file
                 wx.MessageBox(f'Saved private key to {private_key_file}', 'Info', wx.OK | wx.ICON_INFORMATION)
@@ -295,11 +306,11 @@ class App(wx.Frame):
 
         if self.use_value_check.IsChecked():
             private_key_value = self.private_key_value.GetValue()
-            private_key_path = os.path.expanduser('~/.ssh/id_rsa')
-            with open(private_key_path, 'w') as f:
+            temp_private_key_path = os.path.expanduser(f'~/.ssh/temp_key_{host}')
+            with open(temp_private_key_path, 'w') as f:
                 f.write(private_key_value)
-            os.chmod(private_key_path, 0o600)
-            private_key = private_key_path
+            os.chmod(temp_private_key_path, 0o600)
+            private_key = temp_private_key_path
 
         self.open_terminal(host, user, port, private_key)
 
@@ -309,6 +320,9 @@ class App(wx.Frame):
         p.start()
         p.join()
 
+def delete_ssh_key_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 def start_terminal(host, user, port, private_key):
     if host == '' or host.isspace() or host is None:
@@ -328,3 +342,9 @@ def start_terminal(host, user, port, private_key):
         subprocess.Popen(['start', 'cmd', '/k'] + connection, shell=True)
     else:  # Unix-based systems
         subprocess.Popen(['x-terminal-emulator', '-e'] + connection)
+
+    time.sleep(5)
+
+    if private_key and os.path.exists(private_key):
+
+        os.remove(private_key)
