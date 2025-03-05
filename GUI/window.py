@@ -7,6 +7,7 @@ import json
 from GUI.appearance_dialog import AppearanceDialog
 from GUI.settings_dialog import SettingsDialog
 import requests
+import copy
 
 
 class App(wx.Frame):
@@ -266,7 +267,9 @@ class App(wx.Frame):
         url = self.settings.get('connection', {}).get('server', '')
         api_key = self.settings.get('connection', {}).get('api_key', '')
         if url and api_key:
-            conf = self._format_config(config)
+            conf = copy.deepcopy(config)
+
+            conf = self._format_config(conf)
 
             headers = {
                 'Authorization': f'Bearer {api_key}',
