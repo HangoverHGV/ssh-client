@@ -239,6 +239,7 @@ class App(wx.Frame):
                 self.private_key_value.Disable()
                 self.private_key_path.Enable()
                 self.browse_button.Enable()
+                self.name_input.SetValue(selected_config.get('name', ''))
 
     def clear_all_fields(self):
         self.ip_input.SetValue('')
@@ -282,16 +283,12 @@ class App(wx.Frame):
 
     def on_save_configs_click(self, event):
         config_name = self.name_input.GetValue()
-        parent_configs_name = [confs['name'] for confs in self.configs]
         if config_name:
-            if config_name in parent_configs_name:
-                wx.MessageBox('Config name already exists', 'Error', wx.OK | wx.ICON_ERROR)
-            else:
-                confirm_dialog = wx.MessageDialog(self, f"Do you want to save the configuration '{config_name}'?",
-                                                  "Confirm Save", wx.YES_NO | wx.ICON_QUESTION)
-                if confirm_dialog.ShowModal() == wx.ID_YES:
-                    self.save_configs(config_name)
-                confirm_dialog.Destroy()
+            confirm_dialog = wx.MessageDialog(self, f"Do you want to save the configuration '{config_name}'?",
+                                              "Confirm Save", wx.YES_NO | wx.ICON_QUESTION)
+            if confirm_dialog.ShowModal() == wx.ID_YES:
+                self.save_configs(config_name)
+            confirm_dialog.Destroy()
         else:
             wx.MessageBox('Config name cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
 

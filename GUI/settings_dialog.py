@@ -92,6 +92,7 @@ class SettingsDialog(wx.Dialog):
         connection_dict['sync'] = self.sync_button.GetValue()
         settings = self.parent.load_configs(self.parent.settings_file)
         settings['connection'] = connection_dict
+        self.parent.sync = connection_dict['sync']
         with open(self.parent.settings_file, 'w') as f:
             json.dump(settings, f)
 
@@ -130,13 +131,13 @@ class SettingsDialog(wx.Dialog):
                 if not private_key_path:
                     # Save the private key with a random name if no match is found
                     random_suffix = random.randint(100, 999)
-                    private_key_path = os.path.join(ssh_folder, f'key_{random_suffix}')
+                    private_key_path = os.path.join(ssh_folder, f'key_{fetched_config["name"]}_{random_suffix}')
                     with open(private_key_path, 'w') as f:
                         f.write(private_key_value)
 
                 fetched_config['private_key'] = private_key_path
 
-            # Save the fetched configurations to configs.json
+            selected_config_name = self.parent.configs_dropdown.GetStringSelection()
 
             with open(self.parent.configs_file, 'w') as f:
                 json.dump(fetched_configs, f)
@@ -144,6 +145,19 @@ class SettingsDialog(wx.Dialog):
             self.parent.configs = fetched_configs
             self.parent.populate_configs_dropdown()
 
+            if selected_config_name != 'None':
+                selected_config = next((conf for conf in fetched_configs if conf['name'] == selected_config_name), None)
+                if selected_config:
+                    self.parent.ip_input.SetValue(selected_config.get('hostname', ''))
+                    self.parent.port_input.SetValue(selected_config.get('port', ''))
+                    self.parent.private_key_path.SetValue(selected_config.get('private_key', ''))
+                    self.parent.private_key_value.SetValue('')  # Clear the private key value field
+                    self.parent.use_value_check.SetValue(False)  # Uncheck the use value checkbox
+                    self.parent.private_key_value.Disable()
+                    self.parent.private_key_path.Enable()
+                    self.parent.browse_button.Enable()
+                    self.parent.name_input.SetValue(selected_config.get('name', ''))
+            self.parent.configs_dropdown.SetStringSelection(selected_config_name)
             self.Close()
         else:
             self.label_connection.SetLabel(f'Config fetch failed: {response.status_code}')
