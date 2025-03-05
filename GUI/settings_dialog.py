@@ -93,6 +93,7 @@ class SettingsDialog(wx.Dialog):
         settings = self.parent.load_configs(self.parent.settings_file)
         settings['connection'] = connection_dict
         self.parent.sync = connection_dict['sync']
+
         with open(self.parent.settings_file, 'w') as f:
             json.dump(settings, f)
 

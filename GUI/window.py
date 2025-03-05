@@ -196,6 +196,7 @@ class App(wx.Frame):
         dlg = SettingsDialog(self)
         dlg.ShowModal()
         dlg.Destroy()
+        print(self.sync)
 
     def browse_file(self, event):
         with wx.FileDialog(self, "Select Private Key File", wildcard="All files (*.*)|*.*",
@@ -330,6 +331,7 @@ class App(wx.Frame):
         self.save_configs_json(self.configs_file, self.configs)
         self.configs = self.load_configs(self.configs_file)
         self.populate_configs_dropdown()
+        print(self.sync)
         if self.sync:
             self.sync_config(self.configs)
         self.Refresh()

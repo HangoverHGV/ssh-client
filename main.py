@@ -3,7 +3,7 @@ from GUI.window import App
 
 def main():
     app = wx.App(False)
-    frame = App(None, title="SSH-Client")
+    frame = App(None, title="SSH-Manager")
     frame.Show()
     app.MainLoop()
 
