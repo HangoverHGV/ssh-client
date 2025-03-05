@@ -176,6 +176,8 @@ class App(wx.Frame):
         self.configs = [conf for conf in self.configs if conf['name'] != config_name]
         self.save_configs_json(self.configs_file, self.configs)
         self.populate_configs_dropdown()
+        self.configs_dropdown.SetSelection(0)
+        self.clear_all_fields()
         self.Refresh()
 
     def create_menu_bar(self):
@@ -197,7 +199,6 @@ class App(wx.Frame):
         dlg = SettingsDialog(self)
         dlg.ShowModal()
         dlg.Destroy()
-        print(self.sync)
 
     def browse_file(self, event):
         with wx.FileDialog(self, "Select Private Key File", wildcard="All files (*.*)|*.*",
@@ -252,6 +253,7 @@ class App(wx.Frame):
         self.private_key_value.Disable()
         self.private_key_path.Enable()
         self.browse_button.Enable()
+        self.name_input.SetValue('')
 
     def _format_config(self, config):
         config_to_return = []
@@ -293,6 +295,7 @@ class App(wx.Frame):
             if confirm_dialog.ShowModal() == wx.ID_YES:
                 self.save_configs(config_name)
             confirm_dialog.Destroy()
+            self.configs_dropdown.SetStringSelection(config_name)
         else:
             wx.MessageBox('Config name cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
 
@@ -334,7 +337,6 @@ class App(wx.Frame):
         self.save_configs_json(self.configs_file, self.configs)
         self.configs = self.load_configs(self.configs_file)
         self.populate_configs_dropdown()
-        print(self.sync)
         if self.sync:
             self.sync_config(self.configs)
         self.Refresh()
