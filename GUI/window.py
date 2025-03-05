@@ -6,6 +6,7 @@ import multiprocessing as mp
 import json
 from GUI.appearance_dialog import AppearanceDialog
 from GUI.settings_dialog import SettingsDialog
+import requests
 
 
 class App(wx.Frame):
@@ -17,11 +18,12 @@ class App(wx.Frame):
         self.configs = self.load_configs(self.configs_file)
         self.settings_file = self.init_configs_paths('settings.json')
         self.settings = self.load_configs(self.settings_file)
+        self.sync = self.settings.get('connection', {}).get('sync', False)
         self.load_theme()
         self.populate_configs_dropdown()
 
     @staticmethod
-    def init_configs_paths(file_name='settings.json', init_obj = {}):
+    def init_configs_paths(file_name='settings.json', init_obj={}):
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
@@ -162,7 +164,6 @@ class App(wx.Frame):
 
         vbox.Add(hbox7, flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
 
-
         panel.SetSizer(vbox)
 
     def on_delete_config(self, event):
@@ -249,6 +250,36 @@ class App(wx.Frame):
         self.private_key_path.Enable()
         self.browse_button.Enable()
 
+    def _format_config(self, config):
+        config_to_return = []
+        for c in config:
+            if 'private_key' in c:
+                if os.path.exists(c['private_key']):
+                    with open(c['private_key'], 'r') as f:
+                        c['private_key'] = f.read()
+            config_to_return.append(c)
+        return config_to_return
+
+    def sync_config(self, config: list):
+        url = self.settings.get('connection', {}).get('server', '')
+        api_key = self.settings.get('connection', {}).get('api_key', '')
+        if url and api_key:
+            conf = self._format_config(config)
+
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
+            try:
+                response = requests.post(f'{url}/user/config', headers=headers, json=conf)
+                if response.status_code == 200:
+                    wx.MessageBox('Configurations synced successfully', 'Info', wx.OK | wx.ICON_INFORMATION)
+                else:
+                    wx.MessageBox(f'Failed to sync configurations: {response.json()["detail"]}', 'Error',
+                                  wx.OK | wx.ICON_ERROR)
+            except requests.exceptions.RequestException as e:
+                wx.MessageBox(f'Failed to sync configurations: {str(e)}', 'Error', wx.OK | wx.ICON_ERROR)
+
     def on_save_configs_click(self, event):
         config_name = self.name_input.GetValue()
         parent_configs_name = [confs['name'] for confs in self.configs]
@@ -274,13 +305,12 @@ class App(wx.Frame):
 
         return file_path
 
-
     def save_configs(self, config_name):
         save_config = {}
         save_config['name'] = config_name
         save_config['hostname'] = self.ip_input.GetValue()
         save_config['port'] = self.port_input.GetValue()
-        print(self.use_value_check.IsChecked())
+
         if not self.use_value_check.IsChecked():
             save_config['private_key'] = self.private_key_path.GetValue()
         elif self.use_value_check.IsChecked():
@@ -291,12 +321,21 @@ class App(wx.Frame):
         else:
             save_config['private_key'] = None
 
-        self.configs.append(save_config)
+        # Check if the config name already exists
+        existing_config = next((conf for conf in self.configs if conf['name'] == config_name), None)
+        if existing_config:
+            # Update the existing config
+            existing_config.update(save_config)
+        else:
+            # Add new config
+            self.configs.append(save_config)
+
         self.save_configs_json(self.configs_file, self.configs)
         self.configs = self.load_configs(self.configs_file)
         self.populate_configs_dropdown()
+        if self.sync:
+            self.sync_config(self.configs)
         self.Refresh()
-
 
     def ssh_connect(self, event):
         host = self.ip_input.GetValue()
@@ -322,6 +361,7 @@ class App(wx.Frame):
         p.start()
         p.join()
 
+
 def start_terminal(host, user, port, private_key):
     if host == '' or host.isspace() or host is None:
         wx.MessageBox('Hostname cannot be empty', 'Error', wx.OK | wx.ICON_ERROR)
@@ -341,7 +381,9 @@ def start_terminal(host, user, port, private_key):
     else:  # Unix-based systems
         subprocess.Popen(['x-terminal-emulator', '-e'] + connection)
 
-    time.sleep(5)
+    if 'temp_key' in private_key:
 
-    if private_key and os.path.exists(private_key):
-        os.remove(private_key)
+        time.sleep(5)
+
+        if private_key and os.path.exists(private_key):
+            os.remove(private_key)
