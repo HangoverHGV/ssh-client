@@ -141,6 +141,9 @@ class SettingsDialog(wx.Dialog):
             with open(self.parent.configs_file, 'w') as f:
                 json.dump(fetched_configs, f)
 
+            self.parent.configs = fetched_configs
+            self.parent.populate_configs_dropdown()
+
             self.Close()
         else:
             self.label_connection.SetLabel(f'Config fetch failed: {response.status_code}')
