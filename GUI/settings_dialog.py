@@ -1,11 +1,14 @@
 import wx
 import requests
+import json
 
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
-        super().__init__(None, title='Settings', size=(300, 200))
+        super().__init__(None, title='Settings', size=(400, 300))
+        self.parent = parent
         self.init_ui()
+        self.load_settings()
 
     def init_ui(self):
         panel = wx.Panel(self)
@@ -40,8 +43,8 @@ class SettingsDialog(wx.Dialog):
         self.test_connectio_button = wx.Button(panel, label='Test Connection')
         self.test_connectio_button.Bind(wx.EVT_BUTTON, self.on_test_connection)
         hbox4.Add(self.test_connectio_button)
-        self.ok_button = wx.Button(panel, label='OK')
-        self.ok_button.Bind(wx.EVT_BUTTON, self.on_ok)
+        self.ok_button = wx.Button(panel, label='Save')
+        self.ok_button.Bind(wx.EVT_BUTTON, self.on_save)
         hbox4.Add(self.ok_button)
         self.cancel_button = wx.Button(panel, label='Cancel')
         self.cancel_button.Bind(wx.EVT_BUTTON, self.on_cancel)
@@ -50,19 +53,41 @@ class SettingsDialog(wx.Dialog):
 
         hbox5 = wx.BoxSizer(wx.HORIZONTAL)
         self.label_consection = wx.StaticText(panel, label='')
-        hbox5.Add(self.label_consection)
-        vbox.Add(hbox5, flag=wx.ALIGN_RIGHT | wx.RIGHT, border=10)
+        hbox5.Add(self.label_consection, flag=wx.RIGHT, border=8)
+        vbox.Add(hbox5, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
 
         panel.SetSizer(vbox)
+
+    def load_settings(self):
+        settings = self.parent.load_configs(self.parent.settings_file)
+        connection = settings.get('connection', {})
+        self.text.SetValue(connection.get('api_key', ''))
+        self.text_server.SetValue(connection.get('server', ''))
+        self.sync_button.SetValue(connection.get('sync', False))
 
     def on_test_connection(self, event):
         api_key = self.text.GetValue()
         server = self.text_server.GetValue()
-        response = requests.get(f'{server}/api/v1/test', headers={'Authorization': f'Bearer {api_key}'})
+        try:
+            response = requests.get(f'{server}/user/my/user', headers={'Authorization': f'Bearer {api_key}'})
+        except:
+            self.label_consection.SetLabel('Connection failed')
+            return
         if response.status_code == 200:
-            self.label_consection.SetLabel('Connection successful')
+            self.label_consection.SetLabel(f'Connection successful: {response.status_code}')
+        else:
+            self.label_consection.SetLabel(f'Connection failed: {response.status_code}')
 
-    def on_ok(self, event):
+    def on_save(self, event):
+        connection_dict = {}
+        connection_dict['api_key'] = self.text.GetValue()
+        connection_dict['server'] = self.text_server.GetValue()
+        connection_dict['sync'] = self.sync_button.GetValue()
+        settings = self.parent.load_configs(self.parent.settings_file)
+        settings['connection'] = connection_dict
+        with open(self.parent.settings_file, 'w') as f:
+            json.dump(settings, f)
+
         self.Close()
 
     def on_cancel(self, event):
