@@ -112,6 +112,7 @@ class SettingsDialog(wx.Dialog):
             self.label_connection.SetLabel(f'Config fetched successfully: {response.status_code}')
             fetched_configs = response.json()
 
+
             ssh_folder = os.path.join(os.path.expanduser('~'), '.ssh')
             if not os.path.exists(ssh_folder):
                 os.makedirs(ssh_folder)
@@ -119,7 +120,8 @@ class SettingsDialog(wx.Dialog):
             for fetched_config in fetched_configs:
                 private_key_value = fetched_config.get('private_key', '')
                 private_key_path = None
-
+                if private_key_value != '':
+                    private_key_value = self.parent.decrypt_ssh(private_key_value)
                 if os.path.exists(ssh_folder):
                     for file_name in os.listdir(ssh_folder):
                         file_path = os.path.join(ssh_folder, file_name)

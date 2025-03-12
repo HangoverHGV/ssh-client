@@ -8,6 +8,8 @@ from GUI.appearance_dialog import AppearanceDialog
 from GUI.settings_dialog import SettingsDialog
 import requests
 import copy
+from cryptography.fernet import Fernet, InvalidToken
+import base64
 
 
 class App(wx.Frame):
@@ -19,9 +21,24 @@ class App(wx.Frame):
         self.configs = self.load_configs(self.configs_file)
         self.settings_file = self.init_configs_paths('settings.json')
         self.settings = self.load_configs(self.settings_file)
+        self.key = self.generate_key()
+        self.cipher = Fernet(self.key)
         self.sync = self.settings.get('connection', {}).get('sync', False)
         self.load_theme()
         self.populate_configs_dropdown()
+
+    @staticmethod
+    def generate_key():
+        configs_folder = os.path.join(os.getcwd(), '.configs')
+        key_file = os.path.join(configs_folder, 'key.key')
+        if not os.path.exists(key_file):
+            key = Fernet.generate_key()
+            with open(key_file, 'wb') as f:
+                f.write(key)
+        else:
+            with open(key_file, 'rb') as f:
+                key = f.read()
+        return key
 
     @staticmethod
     def init_configs_paths(file_name='settings.json', init_obj={}):
@@ -255,13 +272,26 @@ class App(wx.Frame):
         self.browse_button.Enable()
         self.name_input.SetValue('')
 
+    def encrypt_ssh(self, ssh_key):
+        encrypted_key = self.cipher.encrypt(ssh_key.encode('utf-8'))
+        return encrypted_key
+
+    def decrypt_ssh(self, ssh_key):
+        try:
+            decrypted_key = self.cipher.decrypt(ssh_key).decode('utf-8')
+            return decrypted_key
+        except InvalidToken:
+            wx.MessageBox('Failed to decrypt the SSH key. The token is invalid.', 'Error', wx.OK | wx.ICON_ERROR)
+            return None
+
     def _format_config(self, config):
         config_to_return = []
         for c in config:
             if 'private_key' in c:
                 if os.path.exists(c['private_key']):
                     with open(c['private_key'], 'r') as f:
-                        c['private_key'] = f.read()
+                        encrypted_key = self.encrypt_ssh(f.read())
+                        c['private_key'] = base64.b64encode(encrypted_key).decode('utf-8')
             config_to_return.append(c)
         return config_to_return
 
