@@ -4,8 +4,6 @@ import json
 import os
 import random
 
-from setuptools.installer import fetch_build_egg
-
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
