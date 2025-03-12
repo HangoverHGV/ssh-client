@@ -336,6 +336,10 @@ class App(wx.Frame):
         file_path = os.path.join(ssh_folder, file_name)
         with open(file_path, 'w') as f:
             f.write(private_key_value)
+        try:
+            os.chmod(file_path, 0o600)
+        except PermissionError:
+            wx.MessageBox('Failed to change the permission of the private key file', 'Error', wx.OK | wx.ICON_ERROR)
 
         return file_path
 
