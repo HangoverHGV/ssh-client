@@ -32,7 +32,7 @@ class App(wx.Frame):
         configs_folder = os.path.join(os.getcwd(), '.configs')
         key_file = os.path.join(configs_folder, 'key.key')
         if not os.path.exists(key_file):
-            key = Fernet.generate_key()
+            key = b'Qnbde_-ONcSIOP6fTG8OSYHCaiQ572o7MjjBavvmJRw='
             with open(key_file, 'wb') as f:
                 f.write(key)
         else:
