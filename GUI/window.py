@@ -278,7 +278,7 @@ class App(wx.Frame):
 
     def decrypt_ssh(self, ssh_key):
         try:
-            decrypted_key = self.cipher.decrypt(ssh_key).decode('utf-8')
+            decrypted_key = self.cipher.decrypt(base64.urlsafe_b64decode(ssh_key)).decode('utf-8')
             return decrypted_key
         except InvalidToken:
             wx.MessageBox('Failed to decrypt the SSH key. The token is invalid.', 'Error', wx.OK | wx.ICON_ERROR)
@@ -291,7 +291,7 @@ class App(wx.Frame):
                 if os.path.exists(c['private_key']):
                     with open(c['private_key'], 'r') as f:
                         encrypted_key = self.encrypt_ssh(f.read())
-                        c['private_key'] = base64.b64encode(encrypted_key).decode('utf-8')
+                        c['private_key'] = base64.urlsafe_b64encode(encrypted_key).decode('utf-8')
             config_to_return.append(c)
         return config_to_return
 
