@@ -138,6 +138,12 @@ class SettingsDialog(wx.Dialog):
                     with open(private_key_path, 'w') as f:
                         f.write(private_key_value)
 
+                try:
+                    os.chmod(private_key_path, 0o600)
+                except Exception as e:
+                    self.label_connection.SetLabel(f'Error changing permission of private key: {e}')
+
+
                 fetched_config['private_key'] = private_key_path
 
             selected_config_name = self.parent.configs_dropdown.GetStringSelection()
