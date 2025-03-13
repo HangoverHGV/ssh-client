@@ -5,7 +5,7 @@ import base64
 import copy
 import requests
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-                             QPushButton, QCheckBox, QComboBox, QFileDialog, QMessageBox, QAction, QMenu,
+                             QPushButton, QCheckBox, QComboBox, QFileDialog, QMessageBox, QAction, QTextEdit,
                              QDesktopWidget)
 from cryptography.fernet import Fernet, InvalidToken
 from GUI.settings_dialog import SettingsDialog
@@ -76,7 +76,7 @@ class App(QMainWindow):
         hbox4 = QHBoxLayout()
         self.private_key_value_lbl = QLabel("Private Key Value:")
         hbox4.addWidget(self.private_key_value_lbl)
-        self.private_key_value = QLineEdit()
+        self.private_key_value = QTextEdit()
         hbox4.addWidget(self.private_key_value)
         self.private_key_value.setDisabled(True)
         vbox.addLayout(hbox4)
@@ -374,8 +374,8 @@ class App(QMainWindow):
         if not self.use_value_check.isChecked():
             save_config['private_key'] = self.private_key_path.text()
         elif self.use_value_check.isChecked():
-            if self.private_key_value.text() != '' or not self.private_key_value.text().isspace():
-                private_key_file = self.save_to_ssh_folder(self.private_key_value.text(), config_name)
+            if self.private_key_value.toPlainText() != '' or not self.private_key_value.toPlainText().isspace():
+                private_key_file = self.save_to_ssh_folder(self.private_key_value.toPlainText(), config_name)
                 save_config['private_key'] = private_key_file
                 QMessageBox.information(self, 'Info', f'Saved private key to {private_key_file}')
         else:
@@ -402,7 +402,7 @@ class App(QMainWindow):
         private_key = self.private_key_path.text()
 
         if self.use_value_check.isChecked():
-            private_key_value = self.private_key_value.text()
+            private_key_value = self.private_key_value.toPlainText()
             temp_private_key_path = os.path.expanduser(f'~/.ssh/temp_key_{host}')
             with open(temp_private_key_path, 'w') as f:
                 f.write(private_key_value)
@@ -411,8 +411,7 @@ class App(QMainWindow):
 
         self.open_terminal(host, user, port, private_key)
 
-    @staticmethod
-    def open_terminal(host, user, port, private_key):
+    def open_terminal(self, host, user, port, private_key):
         if host == '' or host.isspace() or host is None:
             QMessageBox.critical(None, 'Error', 'Hostname cannot be empty')
             return
@@ -436,3 +435,4 @@ class App(QMainWindow):
             time.sleep(5)
             if private_key and os.path.exists(private_key):
                 os.remove(private_key)
+            self.clear_all_fields()
