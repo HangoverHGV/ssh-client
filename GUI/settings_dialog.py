@@ -1,93 +1,89 @@
-import wx
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QMessageBox)
 import requests
 import json
 import os
 import random
 
 
-class SettingsDialog(wx.Dialog):
+class SettingsDialog(QDialog):
     def __init__(self, parent):
-        super().__init__(None, title='Settings', size=(400, 300))
+        super().__init__(parent)
+        self.setWindowTitle('Settings')
+        self.setGeometry(100, 100, 400, 300)
         self.parent = parent
         self.init_ui()
         self.load_settings()
 
     def init_ui(self):
-        panel = wx.Panel(self)
-        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox = QVBoxLayout()
 
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.label = wx.StaticText(panel, label='API Key')
-        hbox1.Add(self.label, flag=wx.RIGHT, border=8)
-        self.text = wx.TextCtrl(panel)
-        hbox1.Add(self.text, proportion=1)
-        vbox.Add(hbox1, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+        hbox1 = QHBoxLayout()
+        self.label = QLabel('API Key')
+        hbox1.addWidget(self.label)
+        self.text = QLineEdit()
+        hbox1.addWidget(self.text)
+        vbox.addLayout(hbox1)
 
-        vbox.Add((-1, 10))
+        hbox2 = QHBoxLayout()
+        self.label_server = QLabel('Server')
+        hbox2.addWidget(self.label_server)
+        self.text_server = QLineEdit()
+        hbox2.addWidget(self.text_server)
+        vbox.addLayout(hbox2)
 
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.label_server = wx.StaticText(panel, label='Server')
-        hbox2.Add(self.label_server, flag=wx.RIGHT, border=8)
-        self.text_server = wx.TextCtrl(panel)
-        hbox2.Add(self.text_server, proportion=1)
-        vbox.Add(hbox2, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
+        hbox3 = QHBoxLayout()
+        self.sync_button = QCheckBox('Sync')
+        hbox3.addWidget(self.sync_button)
+        vbox.addLayout(hbox3)
 
-        vbox.Add((-1, 10))
+        hbox4 = QHBoxLayout()
+        self.test_connection_button = QPushButton('Test Connection')
+        self.test_connection_button.clicked.connect(self.on_test_connection)
+        hbox4.addWidget(self.test_connection_button)
+        self.ok_button = QPushButton('Save')
+        self.ok_button.clicked.connect(self.on_save)
+        hbox4.addWidget(self.ok_button)
+        self.get_config_button = QPushButton('Get Config')
+        self.get_config_button.clicked.connect(self.on_get_config)
+        hbox4.addWidget(self.get_config_button)
+        self.cancel_button = QPushButton('Cancel')
+        self.cancel_button.clicked.connect(self.on_cancel)
+        hbox4.addWidget(self.cancel_button)
+        vbox.addLayout(hbox4)
 
-        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        self.sync_button = wx.CheckBox(panel, label='Sync')
-        hbox3.Add(self.sync_button)
-        vbox.Add(hbox3, flag=wx.ALIGN_RIGHT | wx.RIGHT, border=10)
+        hbox5 = QHBoxLayout()
+        self.label_connection = QLabel('')
+        hbox5.addWidget(self.label_connection)
+        vbox.addLayout(hbox5)
 
-        vbox.Add((-1, 10))
-
-        hbox4 = wx.BoxSizer(wx.HORIZONTAL)
-        self.test_connectio_button = wx.Button(panel, label='Test Connection')
-        self.test_connectio_button.Bind(wx.EVT_BUTTON, self.on_test_connection)
-        hbox4.Add(self.test_connectio_button)
-        self.ok_button = wx.Button(panel, label='Save')
-        self.ok_button.Bind(wx.EVT_BUTTON, self.on_save)
-        hbox4.Add(self.ok_button)
-        self.get_config_button = wx.Button(panel, label='Get Config')
-        self.get_config_button.Bind(wx.EVT_BUTTON, self.on_get_config)
-        hbox4.Add(self.get_config_button)
-        self.cancel_button = wx.Button(panel, label='Cancel')
-        self.cancel_button.Bind(wx.EVT_BUTTON, self.on_cancel)
-        hbox4.Add(self.cancel_button, flag=wx.LEFT | wx.BOTTOM, border=5)
-        vbox.Add(hbox4, flag=wx.ALIGN_RIGHT | wx.RIGHT, border=10)
-
-        hbox5 = wx.BoxSizer(wx.HORIZONTAL)
-        self.label_connection = wx.StaticText(panel, label='')
-        hbox5.Add(self.label_connection, flag=wx.RIGHT, border=8)
-        vbox.Add(hbox5, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=10)
-
-        panel.SetSizer(vbox)
+        self.setLayout(vbox)
 
     def load_settings(self):
         settings = self.parent.load_configs(self.parent.settings_file)
         connection = settings.get('connection', {})
-        self.text.SetValue(connection.get('api_key', ''))
-        self.text_server.SetValue(connection.get('server', ''))
-        self.sync_button.SetValue(connection.get('sync', False))
+        self.text.setText(connection.get('api_key', ''))
+        self.text_server.setText(connection.get('server', ''))
+        self.sync_button.setChecked(connection.get('sync', False))
 
-    def on_test_connection(self, event):
-        api_key = self.text.GetValue()
-        server = self.text_server.GetValue()
+    def on_test_connection(self):
+        api_key = self.text.text()
+        server = self.text_server.text()
         try:
             response = requests.get(f'{server}/user/my/user', headers={'Authorization': f'Bearer {api_key}'})
         except:
-            self.label_connection.SetLabel('Connection failed')
+            self.label_connection.setText('Connection failed')
             return
         if response.status_code == 200:
-            self.label_connection.SetLabel(f'Connection successful: {response.status_code}')
+            self.label_connection.setText(f'Connection successful: {response.status_code}')
         else:
-            self.label_connection.SetLabel(f'Connection failed: {response.status_code}')
+            self.label_connection.setText(f'Connection failed: {response.status_code}')
 
-    def on_save(self, event):
-        connection_dict = {}
-        connection_dict['api_key'] = self.text.GetValue()
-        connection_dict['server'] = self.text_server.GetValue()
-        connection_dict['sync'] = self.sync_button.GetValue()
+    def on_save(self):
+        connection_dict = {
+            'api_key': self.text.text(),
+            'server': self.text_server.text(),
+            'sync': self.sync_button.isChecked()
+        }
         settings = self.parent.load_configs(self.parent.settings_file)
         settings['connection'] = connection_dict
         self.parent.sync = connection_dict['sync']
@@ -95,21 +91,20 @@ class SettingsDialog(wx.Dialog):
         with open(self.parent.settings_file, 'w') as f:
             json.dump(settings, f)
 
-        self.Close()
+        self.close()
 
-    def on_get_config(self, event):
-        api_key = self.text.GetValue()
-        server = self.text_server.GetValue()
+    def on_get_config(self):
+        api_key = self.text.text()
+        server = self.text_server.text()
         try:
             response = requests.post(f'{server}/user/config/data', headers={'Authorization': f'Bearer {api_key}'})
         except:
-            self.label_connection.SetLabel('Connection failed')
+            self.label_connection.setText('Connection failed')
             return
 
         if response.status_code == 200:
-            self.label_connection.SetLabel(f'Config fetched successfully: {response.status_code}')
+            self.label_connection.setText(f'Config fetched successfully: {response.status_code}')
             fetched_configs = response.json()
-
 
             ssh_folder = os.path.join(os.path.expanduser('~'), '.ssh')
             if not os.path.exists(ssh_folder):
@@ -130,7 +125,6 @@ class SettingsDialog(wx.Dialog):
                                     break
 
                 if not private_key_path:
-                    # Save the private key with a random name if no match is found
                     random_suffix = random.randint(100, 999)
                     private_key_path = os.path.join(ssh_folder, f'key_{fetched_config["name"]}_{random_suffix}')
                     with open(private_key_path, 'w') as f:
@@ -139,12 +133,11 @@ class SettingsDialog(wx.Dialog):
                 try:
                     os.chmod(private_key_path, 0o600)
                 except Exception as e:
-                    self.label_connection.SetLabel(f'Error changing permission of private key: {e}')
-
+                    self.label_connection.setText(f'Error changing permission of private key: {e}')
 
                 fetched_config['private_key'] = private_key_path
 
-            selected_config_name = self.parent.configs_dropdown.GetStringSelection()
+            selected_config_name = self.parent.configs_dropdown.currentText()
 
             with open(self.parent.configs_file, 'w') as f:
                 json.dump(fetched_configs, f)
@@ -155,19 +148,19 @@ class SettingsDialog(wx.Dialog):
             if selected_config_name != 'None':
                 selected_config = next((conf for conf in fetched_configs if conf['name'] == selected_config_name), None)
                 if selected_config:
-                    self.parent.ip_input.SetValue(selected_config.get('hostname', ''))
-                    self.parent.port_input.SetValue(selected_config.get('port', ''))
-                    self.parent.private_key_path.SetValue(selected_config.get('private_key', ''))
-                    self.parent.private_key_value.SetValue('')  # Clear the private key value field
-                    self.parent.use_value_check.SetValue(False)  # Uncheck the use value checkbox
-                    self.parent.private_key_value.Disable()
-                    self.parent.private_key_path.Enable()
-                    self.parent.browse_button.Enable()
-                    self.parent.name_input.SetValue(selected_config.get('name', ''))
-            self.parent.configs_dropdown.SetStringSelection(selected_config_name)
-            self.Close()
+                    self.parent.ip_input.setText(selected_config.get('hostname', ''))
+                    self.parent.port_input.setText(selected_config.get('port', ''))
+                    self.parent.private_key_path.setText(selected_config.get('private_key', ''))
+                    self.parent.private_key_value.setText('')
+                    self.parent.use_value_check.setChecked(False)
+                    self.parent.private_key_value.setDisabled(True)
+                    self.parent.private_key_path.setEnabled(True)
+                    self.parent.browse_button.setEnabled(True)
+                    self.parent.name_input.setText(selected_config.get('name', ''))
+            self.parent.configs_dropdown.setCurrentText(selected_config_name)
+            self.close()
         else:
-            self.label_connection.SetLabel(f'Config fetch failed: {response.status_code}')
+            self.label_connection.setText(f'Config fetch failed: {response.status_code}')
 
-    def on_cancel(self, event):
-        self.Close()
+    def on_cancel(self):
+        self.close()

@@ -1,6 +1,6 @@
 import wx
 
-class ConfigContextMenu(wx.Menu):
+class ConfigDialog(wx.Menu):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent

@@ -1,11 +1,14 @@
-import wx
+from PyQt5.QtWidgets import QApplication
 from GUI.window import App
+import sys
+
 
 def main():
-    app = wx.App(False)
-    frame = App(None, title="SSH-Manager")
-    frame.Show()
-    app.MainLoop()
+    app = QApplication(sys.argv)
+    ex = App()
+    ex.show()
+    sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     main()
