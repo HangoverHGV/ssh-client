@@ -4,6 +4,7 @@ use std::process::Command;
 
 #[tauri::command]
 fn open_terminal(server: &str, port: &str, key: &str) {
+    println!("Opening terminal for server: {} on port: {} with key: {}", server, port, key);
     let mut command: String = String::from("ssh ") + server + " -p " + port;
     if !key.is_empty() {
         command += &(" -i ".to_owned() + key);

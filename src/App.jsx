@@ -1,7 +1,8 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {open} from "@tauri-apps/plugin-dialog";
 import "./App.css";
+import ensureConfigFiles from "./helpers/ensureConfigFiles.js";
 
 function App() {
     const [formData, setFormData] = useState({
@@ -9,6 +10,9 @@ function App() {
         port: "22",
         privateKeyPath: "",
     });
+    useEffect(() => {
+        ensureConfigFiles();
+    }, [])
 
     async function populateFilePath() {
         const file = await open({
@@ -21,18 +25,21 @@ function App() {
         }
     }
 
-    async function handleSubmit(e) {
-        e.preventDefault()
+    async function connect() {
+        console.log("Connecting to server...");
         await invoke("open_terminal", {
             server: formData.server,
             port: formData.port,
-            privateKeyPath: formData.privateKeyPath,
+            key: formData.privateKeyPath,
         });
     }
 
     return (
         <main className="container">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                connect();
+            }}>
                 <div>
                     <label htmlFor="server">Server:</label>
                     <input
@@ -59,7 +66,7 @@ function App() {
                     />
                     <button type="button" onClick={populateFilePath}>Open File Dialog</button>
                 </div>
-                <button type="submit">Submit</button>
+                <button type="submit">Connect</button>
             </form>
         </main>
     );
