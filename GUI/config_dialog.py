@@ -8,6 +8,8 @@ class ConfigDialog(QDialog):
         self.setGeometry(100, 100, 400, 300)
         self.parent = parent
         self.init_ui()
+        self.load_settings()
+
 
     def init_ui(self):
         vbox = QVBoxLayout()
@@ -37,13 +39,17 @@ class ConfigDialog(QDialog):
 
     def load_settings(self):
         settings = self.parent.load_configs(self.parent.settings_file)
-        connection = settings.get('appearance', {})
-        self.theme_dropdown.setCurrentText(connection.get('theme', ''))
-        self.font_size_text.setText(connection.get('font_size', ''))
+        appearance = settings.get('appearance', {})
+        theme = appearance.get('theme', 'Dark')
+        font_size = appearance.get('font_size', '12')
+        self.theme_dropdown.setCurrentText(theme)
+        self.font_size_text.setText(str(font_size))
 
     def on_save(self):
         theme = self.theme_dropdown.currentText()
         font_size = self.font_size_text.text()
-        self.parent.save_configs(self.parent.settings_file, 'appearance', {'theme': theme, 'font_size': font_size})
+        self.parent.save_configs_json(self.parent.settings_file, {'theme': theme, 'font_size': font_size}, 'appearance')
+        self.parent.apply_theme(theme)
+        self.parent.apply_font_size(font_size)
         self.close()
 

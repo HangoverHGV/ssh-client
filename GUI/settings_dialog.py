@@ -91,8 +91,6 @@ class SettingsDialog(QDialog):
         with open(self.parent.settings_file, 'w') as f:
             json.dump(settings, f)
 
-        self.close()
-
     def on_get_config(self):
         api_key = self.text.text()
         server = self.text_server.text()

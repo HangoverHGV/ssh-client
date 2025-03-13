@@ -33,6 +33,7 @@ class App(QMainWindow):
         self.setCentralWidget(central_widget)
         vbox = QVBoxLayout()
 
+
         # First row
         hbox1 = QHBoxLayout()
         self.label = QLabel("Hostname:")
@@ -134,7 +135,7 @@ class App(QMainWindow):
 
     def init_configs_paths(self, file_name='settings.json', init_obj=None):
         if init_obj is None:
-            init_obj = {'appearance': {'theme': 'light', 'font_color': '#000000', 'font_size': 12}}
+            init_obj = {'appearance': {'theme': 'Light', 'font_color': '#000000', 'font_size': 12}}
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
@@ -149,12 +150,18 @@ class App(QMainWindow):
             configs = json.load(f)
         return configs
 
-    def save_configs_json(self, config_file, configs):
-        with open(config_file, 'w') as f:
-            json.dump(configs, f)
+    def save_configs_json(self, config_file, configs, setting_key=None):
+        if setting_key is None:
+            with open(config_file, 'w') as f:
+                json.dump(configs, f)
+        else:
+            settings = self.load_configs(config_file)
+            settings[setting_key] = configs
+            with open(config_file, 'w') as f:
+                json.dump(settings, f)
 
     def change_theme(self, theme, font_color, font_size):
-        if theme == 'dark':
+        if theme == 'Dark':
             self.setStyleSheet("background-color: #2D2D30; color: #FFFFFF;")
         else:
             self.setStyleSheet("background-color: #FFFFFF; color: #000000;")
@@ -175,14 +182,47 @@ class App(QMainWindow):
             json.dump(settings, f)
         self.load_theme()
 
+    def apply_theme(self, theme):
+        if theme == 'Dark':
+            self.setStyleSheet("""
+                QWidget {
+                    background-color: #2D2D30;
+                    color: #FFFFFF;
+                }
+                QLineEdit, QComboBox, QPushButton {
+                    background-color: #3E3E42;
+                    color: #FFFFFF;
+                    border: 1px solid #555555;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QWidget {
+                    background-color: #FFFFFF;
+                    color: #000000;
+                }
+                QLineEdit, QComboBox, QPushButton {
+                    background-color: #F0F0F0;
+                    color: #000000;
+                    border: 1px solid #CCCCCC;
+                }
+            """)
+
+    def apply_font_size(self, font_size):
+        self.setStyleSheet(f"""
+            QWidget {{
+                font-size: {font_size}px;
+            }}
+        """)
+
     def load_theme(self):
         with open(self.settings_file, 'r') as f:
             settings = json.load(f)
         appearance = settings.get('appearance', {})
-        theme = appearance.get('theme', 'light')
-        font_color = appearance.get('font_color', '#000000')
+        theme = appearance.get('theme', 'Light')
         font_size = appearance.get('font_size', 12)
-        self.change_theme(theme, font_color, font_size)
+        self.apply_theme(theme)
+        self.apply_font_size(font_size)
 
     def on_delete_config(self):
         selected_config = self.configs_dropdown.currentText()
