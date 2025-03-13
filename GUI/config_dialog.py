@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton)
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QPushButton, QDesktopWidget)
 
 
 class ConfigDialog(QDialog):
@@ -6,9 +6,15 @@ class ConfigDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle('Settings')
         self.setGeometry(100, 100, 400, 300)
+        self.center()
         self.parent = parent
         self.init_ui()
         self.load_settings()
+
+    def center(self):
+        screen = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2)
 
 
     def init_ui(self):

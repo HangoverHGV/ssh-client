@@ -5,7 +5,8 @@ import base64
 import copy
 import requests
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-                             QPushButton, QCheckBox, QComboBox, QFileDialog, QMessageBox, QAction, QMenu)
+                             QPushButton, QCheckBox, QComboBox, QFileDialog, QMessageBox, QAction, QMenu,
+                             QDesktopWidget)
 from cryptography.fernet import Fernet, InvalidToken
 from GUI.settings_dialog import SettingsDialog
 from GUI.config_dialog import ConfigDialog
@@ -15,7 +16,8 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('SSH Manager')
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 1000, 700)
+        self.center()
         self.init_ui()
         self.configs_file = self.init_configs_paths('configs.json', [])
         self.configs = self.load_configs(self.configs_file)
@@ -27,6 +29,11 @@ class App(QMainWindow):
         self.load_theme()
         self.populate_configs_dropdown()
 
+    def center(self):
+        screen = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2)
+
     def init_ui(self):
         self.create_menu()
         central_widget = QWidget()
@@ -37,13 +44,16 @@ class App(QMainWindow):
         # First row
         hbox1 = QHBoxLayout()
         self.label = QLabel("Hostname:")
-        hbox1.addWidget(self.label)
+        # hbox1.addWidget(self.label)
         vbox.addLayout(hbox1)
 
         # Second row
         hbox2 = QHBoxLayout()
+        hbox2.addWidget(self.label)
         self.ip_input = QLineEdit()
         hbox2.addWidget(self.ip_input)
+        self.port_label = QLabel("Port:")
+        hbox2.addWidget(self.port_label)
         self.port_input = QLineEdit()
         hbox2.addWidget(self.port_input)
         self.connect_button = QPushButton('Connect')

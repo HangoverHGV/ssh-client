@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QMessageBox)
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QMessageBox
+                             , QDesktopWidget)
 import requests
 import json
 import os
@@ -11,8 +12,14 @@ class SettingsDialog(QDialog):
         self.setWindowTitle('Settings')
         self.setGeometry(100, 100, 400, 300)
         self.parent = parent
+        self.center()
         self.init_ui()
         self.load_settings()
+
+    def center(self):
+        screen = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2)
 
     def init_ui(self):
         vbox = QVBoxLayout()
