@@ -134,7 +134,7 @@ class App(QMainWindow):
 
     def init_configs_paths(self, file_name='settings.json', init_obj=None):
         if init_obj is None:
-            init_obj = {}
+            init_obj = {'appearance': {'theme': 'light', 'font_color': '#000000', 'font_size': 12}}
         configs_folder = os.path.join(os.getcwd(), '.configs')
         if not os.path.exists(configs_folder):
             os.makedirs(configs_folder)
