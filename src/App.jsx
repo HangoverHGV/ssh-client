@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {invoke} from "@tauri-apps/api/core";
+import {open} from "@tauri-apps/plugin-dialog";
 import "./App.css";
 
 function App() {
@@ -9,9 +10,24 @@ function App() {
         privateKeyPath: "",
     });
 
+    async function populateFilePath() {
+        const file = await open({
+            multiple: false,
+            directory: false,
+            filters: [{name: "All Files", extensions: ["*"]}],
+        });
+        if (file) {
+            setFormData({...formData, privateKeyPath: file});
+        }
+    }
+
     async function handleSubmit(e) {
-        e.preventDefault();
-        console.log(formData);
+        e.preventDefault()
+        await invoke("open_terminal", {
+            server: formData.server,
+            port: formData.port,
+            privateKeyPath: formData.privateKeyPath,
+        });
     }
 
     return (
@@ -41,7 +57,7 @@ function App() {
                         value={formData.privateKeyPath}
                         onChange={(e) => setFormData({...formData, privateKeyPath: e.target.value})}
                     />
-                    <button type="button" onClick={() => invoke("open_file_dialog")}>Open File Dialog</button>
+                    <button type="button" onClick={populateFilePath}>Open File Dialog</button>
                 </div>
                 <button type="submit">Submit</button>
             </form>
