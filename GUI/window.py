@@ -196,7 +196,6 @@ class App(QMainWindow):
                 }
             """)
 
-
     def apply_font_size(self, font_size):
         self.setStyleSheet(f"""
             QWidget {{
