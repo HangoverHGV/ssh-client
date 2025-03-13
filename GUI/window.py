@@ -77,6 +77,7 @@ class App(QMainWindow):
         self.private_key_value_lbl = QLabel("Private Key Value:")
         hbox4.addWidget(self.private_key_value_lbl)
         self.private_key_value = QTextEdit()
+        self.private_key_value.setMinimumSize(600, 300)
         hbox4.addWidget(self.private_key_value)
         self.private_key_value.setDisabled(True)
         vbox.addLayout(hbox4)
