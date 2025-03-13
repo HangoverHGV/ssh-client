@@ -26,8 +26,8 @@ class App(QMainWindow):
         self.key = self.generate_key()
         self.cipher = Fernet(self.key)
         self.sync = self.settings.get('connection', {}).get('sync', False)
-        self.load_theme()
         self.populate_configs_dropdown()
+        self.load_theme()
 
     def center(self):
         screen = QDesktopWidget().screenGeometry()
@@ -39,7 +39,6 @@ class App(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         vbox = QVBoxLayout()
-
 
         # First row
         hbox1 = QHBoxLayout()
@@ -171,48 +170,26 @@ class App(QMainWindow):
             with open(config_file, 'w') as f:
                 json.dump(settings, f)
 
-    def change_theme(self, theme, font_color, font_size):
-        if theme == 'Dark':
-            self.setStyleSheet("background-color: #2D2D30; color: #FFFFFF;")
-        else:
-            self.setStyleSheet("background-color: #FFFFFF; color: #000000;")
-
-        font = self.font()
-        font.setPointSize(font_size)
-        self.setFont(font)
-
-    def save_theme(self, theme, font_color, font_size):
-        settings = {
-            'appearance': {
-                'theme': theme,
-                'font_color': font_color,
-                'font_size': font_size
-            }
-        }
-        with open(self.settings_file, 'w') as f:
-            json.dump(settings, f)
-        self.load_theme()
-
     def apply_theme(self, theme):
         if theme == 'Dark':
-            self.setStyleSheet("""
+            self.centralWidget().setStyleSheet("""
                 QWidget {
                     background-color: #2D2D30;
                     color: #FFFFFF;
                 }
-                QLineEdit, QComboBox, QPushButton {
+                QLineEdit, QComboBox, QPushButton, QTextEdit {
                     background-color: #3E3E42;
                     color: #FFFFFF;
                     border: 1px solid #555555;
                 }
             """)
         else:
-            self.setStyleSheet("""
+            self.centralWidget().setStyleSheet("""
                 QWidget {
                     background-color: #FFFFFF;
                     color: #000000;
                 }
-                QLineEdit, QComboBox, QPushButton {
+                QLineEdit, QComboBox, QPushButton, QTextEdit {
                     background-color: #F0F0F0;
                     color: #000000;
                     border: 1px solid #CCCCCC;
