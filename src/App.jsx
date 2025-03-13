@@ -1,51 +1,52 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import {useState} from "react";
+import {invoke} from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+    const [formData, setFormData] = useState({
+        server: "",
+        port: "22",
+        privateKeyPath: "",
+    });
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+    async function handleSubmit(e) {
+        e.preventDefault();
+        console.log(formData);
+    }
 
-  return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
-  );
+    return (
+        <main className="container">
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="server">Server:</label>
+                    <input
+                        type="text"
+                        id="server"
+                        value={formData.server}
+                        onChange={(e) => setFormData({...formData, server: e.target.value})}
+                    />
+                    <label htmlFor="port">Port:</label>
+                    <input
+                        type="number"
+                        id="port"
+                        value={formData.port}
+                        onChange={(e) => setFormData({...formData, port: e.target.value})}
+                    />
+                </div>
+                <div className="full-width">
+                    <label htmlFor="privateKeyPath">Private Key Path:</label>
+                    <input
+                        type="text"
+                        id="privateKeyPath"
+                        value={formData.privateKeyPath}
+                        onChange={(e) => setFormData({...formData, privateKeyPath: e.target.value})}
+                    />
+                    <button type="button" onClick={() => invoke("open_file_dialog")}>Open File Dialog</button>
+                </div>
+                <button type="submit">Submit</button>
+            </form>
+        </main>
+    );
 }
 
 export default App;
