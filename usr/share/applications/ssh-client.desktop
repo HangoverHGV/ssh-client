@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=SSH Manager
+Comment=An SSH key manager for Windows and Linux
+Exec=/usr/local/bin/ssh-client
+Icon=/etc/ssh-client/icon.png
+Terminal=false
+Type=Application
+Categories=Utility;
