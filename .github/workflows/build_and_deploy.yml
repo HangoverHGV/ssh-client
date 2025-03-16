@@ -41,7 +41,7 @@ jobs:
     - name: Extract tag name from commit message
       id: extract_tag
       run: |
-        TAG_NAME=$(git log -1 --pretty=%B | grep -oP '(?<=tag: )\S+')
+        TAG_NAME=$(git log -1 --pretty=%B | grep -oP 'tag:\s?v\d+\.\d+\.\d+')
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
     
     - name: Create Release
