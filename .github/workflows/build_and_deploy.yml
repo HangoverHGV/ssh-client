@@ -12,6 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      TAG_NAME: "v1.0.1"
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -37,26 +40,6 @@ jobs:
       run: |
         chmod +x build_deb.sh
         ./build_deb.sh
-
-    - name: Extract tag name from commit message
-      id: extract_tag
-      run: |
-        TAG=$(git log -1 --pretty=%B | grep -oP 'tag:\s?v\d+\.\d+\.\d+')
-        TAG_NAME=$(echo "$TAG" | sed -n 's/.*tag:v\([0-9.]*\).*/\1/p')
-        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-    - name: Create Git tag
-      run: |
-        git tag ${{ env.TAG_NAME }}
-        git push origin --tags --follow-tags -u hangoverhgv:${{ secrets.ACTIONS_TOKEN }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Verify tag exists
-      run: |
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          echo "Tag $TAG_NAME does not exist."
-          exit 1
-        fi
     
     - name: Create Release
       id: create_release
