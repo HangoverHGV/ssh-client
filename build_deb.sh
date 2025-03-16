@@ -2,7 +2,7 @@
 
 # Variables
 APP_NAME="ssh-manager"
-VERSION="1.0.2"
+VERSION="v1.0.2"
 ARCH="amd64"
 MAINTAINER="Hangover <hangobogdan@gmail.com>"
 DESCRIPTION="SSH Manager Application"
