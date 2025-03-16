@@ -42,4 +42,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ssh-manager
-        path: *.deb
+        path: '*.deb'
