@@ -39,7 +39,7 @@ jobs:
         ./build_deb.sh
 
     - name: Upload .deb package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: ssh-manager
         path: '*.deb'
