@@ -47,7 +47,7 @@ jobs:
     - name: Create Git tag
       run: |
         git tag ${{ env.TAG_NAME }}
-        git push origin ${{ env.TAG_NAME }}
+        git push origin --tags --follow-tags -u hangoverhgv:${{ secrets.ACTIONS_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
