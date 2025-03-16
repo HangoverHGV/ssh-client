@@ -43,6 +43,19 @@ jobs:
       run: |
         TAG_NAME=$(git log -1 --pretty=%B | grep -oP 'tag:\s?v\d+\.\d+\.\d+')
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+    - name: Create Git tag
+      run: |
+        git tag ${{ env.TAG_NAME }}
+        git push origin ${{ env.TAG_NAME }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify tag exists
+      run: |
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME does not exist."
+          exit 1
+        fi
     
     - name: Create Release
       id: create_release
