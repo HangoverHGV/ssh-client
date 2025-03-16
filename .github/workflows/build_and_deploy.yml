@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TAG_NAME: "v1.0.1"
+      TAG_NAME: "v1.0.2"
 
     steps:
     - name: Checkout repository
