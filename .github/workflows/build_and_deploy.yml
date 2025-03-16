@@ -37,6 +37,22 @@ jobs:
       run: |
         chmod +x build_deb.sh
         ./build_deb.sh
+    - name: Delete existing tag
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const tagName = 'v1.0.0';
+          try {
+            await github.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/${tagName}`
+            });
+          } catch (error) {
+            if (error.status !== 404) {
+              throw error;
+            }
+          }
 
     - name: Create Release
       id: create_release
