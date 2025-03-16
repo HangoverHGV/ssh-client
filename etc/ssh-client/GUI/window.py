@@ -416,7 +416,7 @@ class App(QMainWindow):
 
 def open_ssh_terminal(connection):
     if os.name == 'nt':  # Windows
-        subprocess.Popen(["cmd.exe", "/c", "start"] + connection)
+        subprocess.Popen(['start', 'cmd', '/k'] + connection, shell=True)
     elif os.name == 'posix':  # Linux and macOS
         if sys.platform == 'darwin':  # macOS
             subprocess.Popen(["open", "-a", "Terminal.app"] + connection)
@@ -425,12 +425,7 @@ def open_ssh_terminal(connection):
                                   "lxterminal", "mate-terminal"]
             for terminal in terminal_emulators:
                 if shutil.which(terminal):
-                    if terminal == "gnome-terminal":
-                        subprocess.Popen([terminal, "--", "bash", "-c", f"ssh {' '.join(connection)}; exec bash"])
-                    elif terminal == "x-terminal-emulator":
-                        subprocess.Popen([terminal, "-e", f"ssh {' '.join(connection)}"])
-                    else:
-                        subprocess.Popen([terminal, "-e", f"ssh {' '.join(connection)}"])
+                    subprocess.Popen([terminal, '-e'] + connection)
                     break
             else:
                 QMessageBox.critical(None, 'Error', 'No supported terminal emulator found')
