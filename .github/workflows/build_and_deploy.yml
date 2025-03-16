@@ -38,8 +38,23 @@ jobs:
         chmod +x build_deb.sh
         ./build_deb.sh
 
-    - name: Upload .deb package
-      uses: actions/upload-artifact@v4.6.1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: ssh-manager
-        path: '*.deb'
+        tag_name: v1.0.0
+        release_name: Release v1.0.0
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ssh-manager_1.0.0_amd64.deb
+        asset_name: ssh-manager_1.0.0_amd64.deb
+        asset_content_type: application/x-debian-package
