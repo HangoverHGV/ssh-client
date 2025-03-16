@@ -1,4 +1,5 @@
 import sys
+import shutil
 import os
 import json
 import base64
@@ -10,6 +11,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLa
 from cryptography.fernet import Fernet, InvalidToken
 from GUI.settings_dialog import SettingsDialog
 from GUI.config_dialog import ConfigDialog
+import subprocess
 
 
 class App(QMainWindow):
@@ -403,10 +405,7 @@ class App(QMainWindow):
         if private_key:
             connection.extend(["-i", private_key])
 
-        if os.name == 'nt':  # Windows
-            os.system('start cmd /k ' + ' '.join(connection))
-        else:  # Unix-based systems
-            os.system('x-terminal-emulator -e ' + ' '.join(connection))
+        open_ssh_terminal(connection)
 
         if 'temp_key' in private_key:
             import time
@@ -414,3 +413,24 @@ class App(QMainWindow):
             if private_key and os.path.exists(private_key):
                 os.remove(private_key)
             self.clear_all_fields()
+
+def open_ssh_terminal(connection):
+    if os.name == 'nt':  # Windows
+        subprocess.Popen(["cmd.exe", "/c", "start"] + connection)
+    elif os.name == 'posix':  # Linux and macOS
+        if sys.platform == 'darwin':  # macOS
+            subprocess.Popen(["open", "-a", "Terminal.app"] + connection)
+        else:  # Linux
+            terminal_emulators = ["gnome-terminal", "x-terminal-emulator", "konsole", "xfce4-terminal",
+                                  "lxterminal", "mate-terminal"]
+            for terminal in terminal_emulators:
+                if shutil.which(terminal):
+                    if terminal == "gnome-terminal":
+                        subprocess.Popen([terminal, "--", "bash", "-c", f"ssh {' '.join(connection)}; exec bash"])
+                    elif terminal == "x-terminal-emulator":
+                        subprocess.Popen([terminal, "-e", f"ssh {' '.join(connection)}"])
+                    else:
+                        subprocess.Popen([terminal, "-e", f"ssh {' '.join(connection)}"])
+                    break
+            else:
+                QMessageBox.critical(None, 'Error', 'No supported terminal emulator found')
