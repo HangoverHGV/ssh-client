@@ -1,16 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-#[macro_use]
-extern crate lazy_static;
-
 mod conf_manager;
+use serde_json::json;
 use std::path::PathBuf;
-use std::sync::Mutex;
-
-lazy_static! {
-    static ref CONF_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
-}
+use conf_manager::CONF_DIR;
 
 fn main() {
     let conf_dir: Option<PathBuf> = match conf_manager::mkdir(".config") {
@@ -24,7 +18,17 @@ fn main() {
         }
     };
 
-    *CONF_DIR.lock().unwrap() = conf_dir;
+    if let Some(ref dir) = conf_dir {
+        *CONF_DIR.lock().unwrap() = Some(dir.clone());
+
+        let settings_path = "settings.json";
+        let config_path = "config.json";
+
+        conf_manager::create_json(settings_path, json!({})).unwrap();
+        conf_manager::create_json(config_path, json!([])).unwrap();
+    } else {
+        eprintln!("Conf directory was not created.");
+    }
 
     ssh_client_lib::run()
 }
