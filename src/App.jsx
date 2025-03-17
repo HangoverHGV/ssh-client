@@ -2,7 +2,6 @@ import {useState, useEffect} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {open} from "@tauri-apps/plugin-dialog";
 import "./App.css";
-import ensureConfigFiles from "./helpers/ensureConfigFiles.js";
 
 function App() {
     const [formData, setFormData] = useState({
@@ -10,9 +9,6 @@ function App() {
         port: "22",
         privateKeyPath: "",
     });
-    useEffect(() => {
-        ensureConfigFiles();
-    }, [])
 
     async function populateFilePath() {
         const file = await open({
