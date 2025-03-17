@@ -4,7 +4,7 @@
 mod conf_manager;
 use serde_json::json;
 use std::path::PathBuf;
-use conf_manager::CONF_DIR;
+use conf_manager::{CONF_DIR, SETTINGS_FILE, CONFIG_FILE};
 
 fn main() {
     let conf_dir: Option<PathBuf> = match conf_manager::mkdir(".config") {
@@ -21,14 +21,16 @@ fn main() {
     if let Some(ref dir) = conf_dir {
         *CONF_DIR.lock().unwrap() = Some(dir.clone());
 
-        let settings_path = "settings.json";
-        let config_path = "config.json";
+        let settings_path = conf_manager::create_json("settings.json", json!({})).unwrap();
+        let configs_path = conf_manager::create_json("config.json", json!([])).unwrap();
 
-        conf_manager::create_json(settings_path, json!({})).unwrap();
-        conf_manager::create_json(config_path, json!([])).unwrap();
+        *SETTINGS_FILE.lock().unwrap() = Some(settings_path);
+        *CONFIG_FILE.lock().unwrap() = Some(configs_path);
+
     } else {
         eprintln!("Conf directory was not created.");
     }
+
 
     ssh_client_lib::run()
 }

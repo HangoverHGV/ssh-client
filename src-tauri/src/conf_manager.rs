@@ -10,6 +10,8 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref CONF_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
+    pub static ref SETTINGS_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
+    pub static ref CONFIG_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
 }
 
 pub fn mkdir(relative_path: &str) -> Result<PathBuf, std::io::Error> {
@@ -23,17 +25,15 @@ pub fn mkdir(relative_path: &str) -> Result<PathBuf, std::io::Error> {
     Ok(abs_path)
 }
 
-pub fn create_json(conf_name: &str, data: serde_json::Value) -> std::io::Result<()> {
+pub fn create_json(conf_name: &str, data: serde_json::Value) -> std::io::Result<PathBuf> {
     let conf_dir = CONF_DIR.lock().unwrap();
     if let Some(ref dir) = *conf_dir {
         let abs_path = dir.join(conf_name);
-        let mut file = fs::File::create(abs_path)?;
+        let mut file = fs::File::create(&abs_path)?;
         file.write_all(serde_json::to_string_pretty(&data).unwrap().as_bytes())?;
+        Ok(abs_path)
     } else {
         eprintln!("Conf directory is not set");
+        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Conf directory is not set"))
     }
-
-
-
-    Ok(())
 }
