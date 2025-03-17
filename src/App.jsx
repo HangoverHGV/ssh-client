@@ -9,6 +9,20 @@ function App() {
         port: "22",
         privateKeyPath: "",
     });
+    const [settingFile, setSettingsFile] = useState(null);
+    const [configsFile, setConfigsFile] = useState(null);
+
+    useEffect(() => {
+        // loadSettings();
+    }, []);
+
+    async function loadSettings() {
+        console.log("Loading settings...");
+        const settings = await invoke("get_config_paths");
+        console.log(settings);
+        setSettingsFile(settings.settings);
+        setConfigsFile(settings.configs);
+    }
 
     async function populateFilePath() {
         const file = await open({
@@ -63,6 +77,7 @@ function App() {
                     <button type="button" onClick={populateFilePath}>Open File Dialog</button>
                 </div>
                 <button type="submit">Connect</button>
+                <button type="button" onClick={loadSettings}>Settings</button>
             </form>
         </main>
     );

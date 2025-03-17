@@ -1,9 +1,10 @@
-use std::fs;
-use std::path::{PathBuf};
-use std::env;
-use std::io::Write;
 use serde_json;
-use std::sync::Mutex;
+use std::env;
+use std::fs;
+use std::io::Write;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use tokio::sync::Notify;
 
 extern crate lazy_static;
 use lazy_static::lazy_static;
@@ -12,6 +13,7 @@ lazy_static! {
     pub static ref CONF_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
     pub static ref SETTINGS_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
     pub static ref CONFIG_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
+    pub static ref INIT_NOTIFY: Arc<Notify> = Arc::new(Notify::new());
 }
 
 pub fn mkdir(relative_path: &str) -> Result<PathBuf, std::io::Error> {
@@ -34,6 +36,9 @@ pub fn create_json(conf_name: &str, data: serde_json::Value) -> std::io::Result<
         Ok(abs_path)
     } else {
         eprintln!("Conf directory is not set");
-        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Conf directory is not set"))
+        Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "Conf directory is not set",
+        ))
     }
 }
