@@ -1,5 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-
+mod conf_manager;
+use conf_manager::{SETTINGS_FILE, CONFIG_FILE};
+use serde_json::json;
 use std::process::Command;
 
 #[tauri::command]
@@ -41,6 +43,16 @@ fn open_terminal(server: &str, port: &str, key: &str) {
     }
 }
 
+#[tauri::command]
+fn get_config_paths() -> serde_json::Value {
+    let settings_file = SETTINGS_FILE.lock().unwrap().as_ref().unwrap().to_str().unwrap().to_string();
+    let configs_file = CONFIG_FILE.lock().unwrap().as_ref().unwrap().to_str().unwrap().to_string();
+
+    json!({
+        "settings_file": settings_file,
+        "configs_file": configs_file
+    })
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
