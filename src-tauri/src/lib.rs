@@ -1,5 +1,4 @@
-mod conf_manager;
-use conf_manager::{CONFIG_FILE, SETTINGS_FILE, INIT_NOTIFY};
+use conf_manager;
 use serde_json::json;
 use std::process::Command;
 use tokio::time::{sleep, Duration};
@@ -43,20 +42,18 @@ fn open_terminal(server: &str, port: &str, key: &str) {
 #[tauri::command]
 async fn get_config_paths() -> serde_json::Value {
     println!("Waiting for configuration files to be set...");
-    INIT_NOTIFY.notified().await;
+    // conf_manager::INIT_NOTIFY.notified().await;
 
     for _ in 0..10 {
         sleep(Duration::from_secs(1)).await;
 
-        let settings_file = SETTINGS_FILE.lock().unwrap().clone();
-        let configs_file = CONFIG_FILE.lock().unwrap().clone();
+        let settings_file = conf_manager::SETTINGS_FILE.lock().unwrap().clone();
+        let configs_file = conf_manager::CONFIG_FILE.lock().unwrap().clone();
 
         println!(
             "Settings file: {:?}, Configs file: {:?}",
             settings_file, configs_file
         );
-        let set_ptr = &SETTINGS_FILE as *const _;
-        println!("{:?}", set_ptr);
         if let (Some(settings_path), Some(configs_path)) =
             (settings_file.as_ref(), configs_file.as_ref())
         {

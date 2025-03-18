@@ -13,7 +13,7 @@ function App() {
     const [configsFile, setConfigsFile] = useState(null);
 
     useEffect(() => {
-        // loadSettings();
+        loadSettings();
     }, []);
 
     async function loadSettings() {

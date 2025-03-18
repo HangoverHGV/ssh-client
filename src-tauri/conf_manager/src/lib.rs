@@ -10,9 +10,9 @@ extern crate lazy_static;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref CONF_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
-    pub static ref SETTINGS_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
-    pub static ref CONFIG_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
+    pub static ref CONF_DIR: Arc<Mutex<Option<PathBuf>>> = Arc::new(Mutex::new(None));
+    pub static ref SETTINGS_FILE: Arc<Mutex<Option<PathBuf>>> = Arc::new(Mutex::new(None));
+    pub static ref CONFIG_FILE: Arc<Mutex<Option<PathBuf>>> = Arc::new(Mutex::new(None));
     pub static ref INIT_NOTIFY: Arc<Notify> = Arc::new(Notify::new());
 }
 

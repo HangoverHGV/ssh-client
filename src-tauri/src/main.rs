@@ -1,8 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod conf_manager;
-use conf_manager::{CONFIG_FILE, CONF_DIR, INIT_NOTIFY, SETTINGS_FILE};
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -16,21 +14,18 @@ fn main() {
     };
 
     if let Some(ref dir) = conf_dir {
-        *CONF_DIR.lock().unwrap() = Some(dir.clone());
+        *conf_manager::CONF_DIR.lock().unwrap() = Some(dir.clone());
 
         let settings_path = conf_manager::create_json("settings.json", json!({})).unwrap();
         let configs_path = conf_manager::create_json("config.json", json!([])).unwrap();
 
-        *SETTINGS_FILE.lock().unwrap() = Some(settings_path);
-        *CONFIG_FILE.lock().unwrap() = Some(configs_path);
+        *conf_manager::SETTINGS_FILE.lock().unwrap() = Some(settings_path);
+        *conf_manager::CONFIG_FILE.lock().unwrap() = Some(configs_path);
 
-        INIT_NOTIFY.notify_waiters();
+        conf_manager::INIT_NOTIFY.notify_waiters();
     } else {
         eprintln!("Conf directory was not created.");
     }
-
-    let set_ptr = &SETTINGS_FILE as *const _;
-    println!("{:?}", set_ptr);
 
     ssh_client_lib::run()
 }
