@@ -21,8 +21,6 @@ fn main() {
 
         *conf_manager::SETTINGS_FILE.lock().unwrap() = Some(settings_path);
         *conf_manager::CONFIG_FILE.lock().unwrap() = Some(configs_path);
-
-        conf_manager::INIT_NOTIFY.notify_waiters();
     } else {
         eprintln!("Conf directory was not created.");
     }

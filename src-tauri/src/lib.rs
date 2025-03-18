@@ -42,7 +42,6 @@ fn open_terminal(server: &str, port: &str, key: &str) {
 #[tauri::command]
 async fn get_config_paths() -> serde_json::Value {
     println!("Waiting for configuration files to be set...");
-    // conf_manager::INIT_NOTIFY.notified().await;
 
     for _ in 0..10 {
         sleep(Duration::from_secs(1)).await;
