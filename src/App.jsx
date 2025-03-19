@@ -28,7 +28,8 @@ function App() {
         const file = await open({
             multiple: false,
             directory: false,
-            filters: [{name: "All Files", extensions: ["*"]}],
+            defaultPath: "~/.ssh",
+            filters: [{name: "All Files", extensions: []}],
         });
         if (file) {
             setFormData({...formData, privateKeyPath: file});
