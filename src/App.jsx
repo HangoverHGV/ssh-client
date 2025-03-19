@@ -2,6 +2,7 @@ import {useState, useEffect} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {open} from "@tauri-apps/plugin-dialog";
 import "./App.css";
+import {homeDir} from "@tauri-apps/api/path";
 
 function App() {
     const [formData, setFormData] = useState({
@@ -11,25 +12,22 @@ function App() {
     });
     const [settingFile, setSettingsFile] = useState(null);
     const [configsFile, setConfigsFile] = useState(null);
-
     useEffect(() => {
         loadSettings();
     }, []);
 
     async function loadSettings() {
-        console.log("Loading settings...");
         const settings = await invoke("get_config_paths");
-        console.log(settings);
         setSettingsFile(settings.settings);
         setConfigsFile(settings.configs);
     }
 
     async function populateFilePath() {
+        const homeDirPath = await homeDir();
         const file = await open({
             multiple: false,
             directory: false,
-            defaultPath: "~/.ssh",
-            filters: [{name: "All Files", extensions: []}],
+            defaultPath: `${homeDirPath}/.ssh`,
         });
         if (file) {
             setFormData({...formData, privateKeyPath: file});
