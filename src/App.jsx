@@ -10,16 +10,16 @@ function App() {
         port: "22",
         privateKeyPath: "",
     });
-    const [settingFile, setSettingsFile] = useState(null);
-    const [configsFile, setConfigsFile] = useState(null);
+    const [settings, setSettings] = useState(null);
+    const [configs, setConfigs] = useState(null);
+
     useEffect(() => {
         loadSettings();
     }, []);
 
     async function loadSettings() {
-        const settings = await invoke("get_config_paths");
-        setSettingsFile(settings.settings);
-        setConfigsFile(settings.configs);
+        setConfigs(await invoke("get_json_configs", { configType: "configs" }));
+        setSettings(await invoke("get_json_configs", { configType: "settings" }));
     }
 
     async function populateFilePath() {
@@ -76,7 +76,6 @@ function App() {
                     <button type="button" onClick={populateFilePath}>Open File Dialog</button>
                 </div>
                 <button type="submit">Connect</button>
-                <button type="button" onClick={loadSettings}>Settings</button>
             </form>
         </main>
     );
