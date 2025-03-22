@@ -32,7 +32,7 @@ div select{
     flex: 1;
 }
 
-button{
+.btn{
     outline: none;
     border: none;
     padding: 0.8rem;
@@ -42,9 +42,28 @@ button{
     margin-left: 10px;
 }
 
-button:hover{
+.btn:hover{
     background: #4a4a4a;
     color: white;
+}
+
+.btn-danger{
+    background: rgb(244, 26, 26);
+    color: white;
+}
+
+.btn-success {
+    background: rgb(21, 189, 21);
+    color: white;
+}
+
+.btn-success:hover{
+    background: rgb(0, 253, 0);
+    color: #afadad;
+}
+
+.btn-danger:hover{
+    background: rgb(255, 60, 60);
 }
 
 #port{

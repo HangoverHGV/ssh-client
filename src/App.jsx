@@ -3,6 +3,9 @@ import {invoke} from "@tauri-apps/api/core";
 import {open} from "@tauri-apps/plugin-dialog";
 import "./App.css";
 import {homeDir} from "@tauri-apps/api/path";
+import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
+import '@szhsin/react-menu/dist/index.css';
+
 
 function App() {
     const [formData, setFormData] = useState({
@@ -81,7 +84,12 @@ function App() {
         });
     }
 
-    return (
+    return <>
+        <nav>
+            <Menu menuButton={<MenuButton className="btn">Edit</MenuButton>}>
+                <MenuItem>Settings</MenuItem>
+            </Menu>
+        </nav>
         <main className="container">
             <form onSubmit={(e) => {
                 e.preventDefault();
@@ -111,14 +119,14 @@ function App() {
                         value={formData.privateKeyPath}
                         onChange={(e) => setFormData({...formData, privateKeyPath: e.target.value})}
                     />
-                    <button type="button" onClick={populateFilePath}>Open File Dialog</button>
+                    <button type="button" className="btn" onClick={populateFilePath}>Open File Dialog</button>
                 </div>
                 <div>
                     <label htmlFor="connectionName">Connection Name:</label>
                     <input type="text" id="connectionName" value={formData.name}
                            onChange={(e) => setFormData({...formData, name: e.target.value})}/>
-                    <button type="button" onClick={saveConfigs}>Save</button>
-                    <button type="button" onClick={deleteConfigs}>Delete</button>
+                    <button type="button" className="btn" onClick={saveConfigs}>Save</button>
+                    <button type="button" className="btn btn-danger" onClick={deleteConfigs}>Delete</button>
                 </div>
                 <div className="full-width">
                     <label htmlFor="connectionName">Saved Connections:</label>
@@ -141,10 +149,10 @@ function App() {
                         ))}
                     </select>
                 </div>
-                <button type="submit">Connect</button>
+                <button type="submit" className="btn btn-success">Connect</button>
             </form>
         </main>
-    );
+    </>;
 }
 
 export default App;
