@@ -29,8 +29,10 @@ pub fn create_json(conf_name: &str, data: serde_json::Value) -> std::io::Result<
     let conf_dir = CONF_DIR.lock().unwrap();
     if let Some(ref dir) = *conf_dir {
         let abs_path = dir.join(conf_name);
-        let mut file = fs::File::create(&abs_path)?;
-        file.write_all(serde_json::to_string_pretty(&data).unwrap().as_bytes())?;
+        if !abs_path.exists() {
+            let mut file = fs::File::create(&abs_path)?;
+            file.write_all(serde_json::to_string_pretty(&data).unwrap().as_bytes())?;
+        }
         Ok(abs_path)
     } else {
         eprintln!("Conf directory is not set");
