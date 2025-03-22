@@ -56,6 +56,23 @@ function App() {
         document.getElementById("connectionSelect").value = formData.name;
     }
 
+    async function deleteConfigs() {
+        const shouldDelete = await confirm("Are you sure you want to delete this configuration?");
+        if (!shouldDelete) {
+            return;
+        }
+        const updatedConfigs = configs.filter(config => config.name !== formData.name);
+        setConfigs(updatedConfigs);
+        await invoke("save_json_config", {configType: "configs", data: updatedConfigs});
+        setFormData({
+            name: "",
+            server: "",
+            port: "22",
+            privateKeyPath: "",
+        });
+        document.getElementById("connectionSelect").value = "Select a connection";
+    }
+
     async function connect() {
         await invoke("open_terminal", {
             server: formData.server,
@@ -101,6 +118,7 @@ function App() {
                     <input type="text" id="connectionName" value={formData.name}
                            onChange={(e) => setFormData({...formData, name: e.target.value})}/>
                     <button type="button" onClick={saveConfigs}>Save</button>
+                    <button type="button" onClick={deleteConfigs}>Delete</button>
                 </div>
                 <div className="full-width">
                     <label htmlFor="connectionName">Saved Connections:</label>
