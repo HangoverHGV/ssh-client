@@ -19,8 +19,8 @@ function App() {
     }, []);
 
     async function loadSettings() {
-        setConfigs(await invoke("get_json_configs", { configType: "configs" }));
-        setSettings(await invoke("get_json_configs", { configType: "settings" }));
+        setConfigs(await invoke("get_json_configs", {configType: "configs"}));
+        setSettings(await invoke("get_json_configs", {configType: "settings"}));
     }
 
     async function populateFilePath() {
@@ -34,9 +34,6 @@ function App() {
             setFormData({...formData, privateKeyPath: file});
         }
     }
-    function appendToConfigs(newConfig) {
-        setConfigs([...configs, newConfig]);
-    }
 
     async function saveConfigs() {
         const existingConfigIndex = configs.findIndex(config => config.name === formData.name);
@@ -49,12 +46,14 @@ function App() {
             const updatedConfigs = [...configs];
             updatedConfigs[existingConfigIndex] = formData;
             setConfigs(updatedConfigs);
-            await invoke("save_json_config", { configType: "configs", data: updatedConfigs });
+            await invoke("save_json_config", {configType: "configs", data: updatedConfigs});
         } else {
             const updatedConfigs = [...configs, formData];
             setConfigs(updatedConfigs);
-            await invoke("save_json_config", { configType: "configs", data: updatedConfigs });
+            await invoke("save_json_config", {configType: "configs", data: updatedConfigs});
         }
+        setFormData(formData);
+        document.getElementById("connectionSelect").value = formData.name;
     }
 
     async function connect() {
@@ -100,14 +99,23 @@ function App() {
                 <div>
                     <label htmlFor="connectionName">Connection Name:</label>
                     <input type="text" id="connectionName" value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}/>
+                           onChange={(e) => setFormData({...formData, name: e.target.value})}/>
                     <button type="button" onClick={saveConfigs}>Save</button>
                 </div>
                 <div className="full-width">
                     <label htmlFor="connectionName">Saved Connections:</label>
-                    <select onChange={(e) => {
+                    <select id="connectionSelect" onChange={(e) => {
                         const selectedConfig = configs.find(config => config.name === e.target.value);
-                        setFormData(selectedConfig);
+                        if (selectedConfig) {
+                            setFormData(selectedConfig);
+                        } else {
+                            setFormData({
+                                name: "",
+                                server: "",
+                                port: "22",
+                                privateKeyPath: "",
+                            });
+                        }
                     }}>
                         <option>Select a connection</option>
                         {configs && configs.map(config => (

@@ -23,7 +23,13 @@ div input{
     font-size: 16px;
     border-radius: 5px;
     flex: 1;
+}
 
+div select{
+    padding: 0.8rem;
+    font-size: 16px;
+    border-radius: 5px;
+    flex: 1;
 }
 
 button{
