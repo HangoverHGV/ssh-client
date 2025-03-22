@@ -66,8 +66,6 @@ async fn get_config_paths() -> serde_json::Value {
 
 #[tauri::command]
 async fn get_json_configs(config_type: &str) -> Result<serde_json::Value, String> {
-    println!("{}", config_type);
-
     if config_type != "settings" && config_type != "configs" {
         return Err("Invalid configuration type".to_string());
     }
@@ -89,12 +87,36 @@ async fn get_json_configs(config_type: &str) -> Result<serde_json::Value, String
     Ok(file_content)
 }
 
+#[tauri::command]
+async fn save_json_config(config_type: &str, data: serde_json::Value) -> Result<serde_json::Value, String> {
+    if config_type != "settings" && config_type != "configs" {
+        return Err("Invalid configuration type".to_string());
+    }
+
+    let file_path = if config_type == "settings" {
+        conf_manager::SETTINGS_FILE.lock().unwrap().clone()
+    } else {
+        conf_manager::CONFIG_FILE.lock().unwrap().clone()
+    };
+
+    match file_path {
+        Some(file) => {
+            let serialized_data = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+            std::fs::write(file, serialized_data).map_err(|e| e.to_string())?;
+            Ok(json!({"status": "success"}))
+        }
+        None => {
+            Err("Config file is not set".to_string())
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![open_terminal, get_config_paths, get_json_configs])
+        .invoke_handler(tauri::generate_handler![open_terminal, get_config_paths, get_json_configs, save_json_config])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

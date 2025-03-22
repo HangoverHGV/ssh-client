@@ -6,6 +6,7 @@ import {homeDir} from "@tauri-apps/api/path";
 
 function App() {
     const [formData, setFormData] = useState({
+        name: "",
         server: "",
         port: "22",
         privateKeyPath: "",
@@ -33,9 +34,30 @@ function App() {
             setFormData({...formData, privateKeyPath: file});
         }
     }
+    function appendToConfigs(newConfig) {
+        setConfigs([...configs, newConfig]);
+    }
+
+    async function saveConfigs() {
+        const existingConfigIndex = configs.findIndex(config => config.name === formData.name);
+
+        if (existingConfigIndex !== -1) {
+            const shouldOverwrite = await confirm("Configuration with this name already exists. Do you want to overwrite it?");
+            if (!shouldOverwrite) {
+                return;
+            }
+            const updatedConfigs = [...configs];
+            updatedConfigs[existingConfigIndex] = formData;
+            setConfigs(updatedConfigs);
+            await invoke("save_json_config", { configType: "configs", data: updatedConfigs });
+        } else {
+            const updatedConfigs = [...configs, formData];
+            setConfigs(updatedConfigs);
+            await invoke("save_json_config", { configType: "configs", data: updatedConfigs });
+        }
+    }
 
     async function connect() {
-        console.log("Connecting to server...");
         await invoke("open_terminal", {
             server: formData.server,
             port: formData.port,
@@ -74,6 +96,24 @@ function App() {
                         onChange={(e) => setFormData({...formData, privateKeyPath: e.target.value})}
                     />
                     <button type="button" onClick={populateFilePath}>Open File Dialog</button>
+                </div>
+                <div>
+                    <label htmlFor="connectionName">Connection Name:</label>
+                    <input type="text" id="connectionName" value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}/>
+                    <button type="button" onClick={saveConfigs}>Save</button>
+                </div>
+                <div className="full-width">
+                    <label htmlFor="connectionName">Saved Connections:</label>
+                    <select onChange={(e) => {
+                        const selectedConfig = configs.find(config => config.name === e.target.value);
+                        setFormData(selectedConfig);
+                    }}>
+                        <option>Select a connection</option>
+                        {configs && configs.map(config => (
+                            <option key={config.name}>{config.name}</option>
+                        ))}
+                    </select>
                 </div>
                 <button type="submit">Connect</button>
             </form>
